@@ -43,6 +43,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         const Duration(seconds: 20),
         onTimeout: () => throw 'Connection timed out. Please check your internet connection and try again.',
       );
+
+      // Invalidate the cached user so the provider re-subscribes to the
+      // newly signed-in user's Firestore document — prevents the previous
+      // account's data from briefly appearing.
+      ref.invalidate(currentUserProvider);
+
       if (mounted) context.go(AppRoutes.home);
     } catch (e) {
       if (mounted) {

@@ -1,10 +1,13 @@
 // ═══════════════════════ PROFILE SCREEN ═══════════════════════
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/services/auth_service.dart';
+import '../../../../core/services/storage_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/models/app_models.dart';
@@ -27,6 +30,8 @@ class ProfileScreen extends ConsumerWidget {
           TextButton(
             onPressed: () async {
               await ref.read(authServiceProvider).logout();
+              // Clear cached user so the next login starts fresh
+              ref.invalidate(currentUserProvider);
               if (context.mounted) context.go(AppRoutes.login);
             },
             child: Text(l10n.signOut, style: const TextStyle(color: AppColors.error)),
@@ -45,12 +50,92 @@ class ProfileScreen extends ConsumerWidget {
   }
 }
 
-class _ProfileContent extends ConsumerWidget {
+class _ProfileContent extends ConsumerStatefulWidget {
   final UserModel user;
   const _ProfileContent({required this.user});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_ProfileContent> createState() => _ProfileContentState();
+}
+
+class _ProfileContentState extends ConsumerState<_ProfileContent> {
+  bool _uploadingPhoto = false;
+
+  Future<void> _pickAndUploadPhoto() async {
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      backgroundColor: context.cardSurface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 8),
+            Container(
+              width: 40, height: 4,
+              decoration: BoxDecoration(
+                color: context.borderColor,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 16),
+            ListTile(
+              leading: const CircleAvatar(
+                backgroundColor: AppColors.primarySurface,
+                child: Icon(Icons.photo_library_rounded, color: AppColors.primary),
+              ),
+              title: const Text('Choose from gallery'),
+              onTap: () => Navigator.pop(context, ImageSource.gallery),
+            ),
+            ListTile(
+              leading: const CircleAvatar(
+                backgroundColor: AppColors.primarySurface,
+                child: Icon(Icons.camera_alt_rounded, color: AppColors.primary),
+              ),
+              title: const Text('Take a photo'),
+              onTap: () => Navigator.pop(context, ImageSource.camera),
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
+
+    if (source == null) return;
+
+    final file = await StorageService.pickImage(source: source);
+    if (file == null) return;
+
+    setState(() => _uploadingPhoto = true);
+    try {
+      final url = await StorageService.uploadProfilePicture(file, widget.user.id);
+      await ref.read(authServiceProvider).updateProfile(
+            widget.user.copyWith(profileImageUrl: url),
+          );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Profile photo updated!'),
+            backgroundColor: AppColors.success,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to update photo: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _uploadingPhoto = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final user = widget.user;
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
@@ -60,24 +145,40 @@ class _ProfileContent extends ConsumerWidget {
             children: [
               Stack(
                 children: [
-                  MemberAvatar(
-                    name: user.fullName,
-                    imageUrl: user.profileImageUrl,
-                    size: 90,
-                    backgroundColor: context.primarySurf,
-                  ),
+                  _uploadingPhoto
+                      ? Container(
+                          width: 90,
+                          height: 90,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: context.primarySurf,
+                          ),
+                          child: const Center(
+                            child: CircularProgressIndicator(
+                                strokeWidth: 2, color: AppColors.primary),
+                          ),
+                        )
+                      : MemberAvatar(
+                          name: user.fullName,
+                          imageUrl: user.profileImageUrl,
+                          size: 90,
+                          backgroundColor: context.primarySurf,
+                        ),
                   Positioned(
                     bottom: 0,
                     right: 0,
-                    child: Container(
-                      width: 30,
-                      height: 30,
-                      decoration: const BoxDecoration(
-                        color: AppColors.primary,
-                        shape: BoxShape.circle,
+                    child: GestureDetector(
+                      onTap: _uploadingPhoto ? null : _pickAndUploadPhoto,
+                      child: Container(
+                        width: 30,
+                        height: 30,
+                        decoration: const BoxDecoration(
+                          color: AppColors.primary,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.camera_alt_rounded,
+                            color: Colors.white, size: 16),
                       ),
-                      child: const Icon(Icons.camera_alt_rounded,
-                          color: Colors.white, size: 16),
                     ),
                   ),
                 ],

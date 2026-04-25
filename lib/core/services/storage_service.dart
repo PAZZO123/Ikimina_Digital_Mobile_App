@@ -1,14 +1,13 @@
 import 'dart:io';
 
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
-
-// StorageService — image picking only (Firebase Storage removed for compatibility)
-// To re-enable cloud uploads, add firebase_storage back to pubspec.yaml
 
 class StorageService {
   static final _picker = ImagePicker();
+  static final _storage = FirebaseStorage.instance;
 
-  /// Pick an image from gallery or camera
+  /// Show gallery/camera picker and return the selected file.
   static Future<File?> pickImage({
     ImageSource source = ImageSource.gallery,
     int maxWidthPx = 800,
@@ -23,24 +22,56 @@ class StorageService {
     return File(picked.path);
   }
 
-  /// Upload profile picture — returns local file path (no cloud upload)
+  /// Upload profile picture to Firebase Storage and return the download URL.
   static Future<String> uploadProfilePicture(File file, String userId) async {
-    // Cloud upload disabled — return local path
-    return file.path;
+    final ref = _storage
+        .ref()
+        .child('users')
+        .child(userId)
+        .child('profile.jpg');
+
+    final task = await ref.putFile(
+      file,
+      SettableMetadata(contentType: 'image/jpeg'),
+    );
+    return await task.ref.getDownloadURL();
   }
 
-  /// Upload group cover image — returns local file path
+  /// Upload group cover image — returns download URL.
   static Future<String> uploadGroupImage(File file, String groupId) async {
-    return file.path;
+    final ref = _storage
+        .ref()
+        .child('group_images')
+        .child('$groupId.jpg');
+
+    final task = await ref.putFile(
+      file,
+      SettableMetadata(contentType: 'image/jpeg'),
+    );
+    return await task.ref.getDownloadURL();
   }
 
-  /// Upload contribution receipt — returns local file path
+  /// Upload contribution receipt — returns download URL.
   static Future<String> uploadReceipt(File file, String contributionId) async {
-    return file.path;
+    final ref = _storage
+        .ref()
+        .child('receipts')
+        .child('$contributionId.jpg');
+
+    final task = await ref.putFile(
+      file,
+      SettableMetadata(contentType: 'image/jpeg'),
+    );
+    return await task.ref.getDownloadURL();
   }
 
-  /// Delete a file (no-op without Firebase Storage)
+  /// Delete a file from Firebase Storage by its download URL.
   static Future<void> deleteFile(String downloadUrl) async {
-    // No-op — cloud storage not enabled
+    try {
+      final ref = _storage.refFromURL(downloadUrl);
+      await ref.delete();
+    } catch (_) {
+      // Ignore — file may already be deleted or URL invalid
+    }
   }
 }
