@@ -1,0 +1,89 @@
+{
+  "@@locale": "en",
+  "appName": "Ikimina Digital",
+  "@appName": { "description": "The name of the application" },
+
+  "welcome": "Welcome back",
+  "signIn": "Sign In",
+  "signOut": "Sign Out",
+  "createAccount": "Create Account",
+  "forgotPassword": "Forgot password?",
+  "email": "Email address",
+  "password": "Password",
+  "confirmPassword": "Confirm password",
+  "fullName": "Full name",
+  "phone": "Phone number",
+
+  "dashboard": "Dashboard",
+  "groups": "Groups",
+  "loans": "Loans",
+  "profile": "Profile",
+  "notifications": "Notifications",
+  "reports": "Reports",
+
+  "myGroups": "My Groups",
+  "createGroup": "Create Group",
+  "joinGroup": "Join Group",
+  "groupName": "Group Name",
+  "groupDescription": "Description",
+  "contributionAmount": "Contribution Amount",
+  "contributionFrequency": "Frequency",
+  "startDate": "Start Date",
+  "inviteCode": "Invite Code",
+  "members": "Members",
+
+  "weekly": "Weekly",
+  "biweekly": "Bi-weekly",
+  "monthly": "Monthly",
+
+  "totalBalance": "Total Balance",
+  "totalContributed": "Total Contributed",
+  "totalLoaned": "Total Loaned",
+
+  "recordContribution": "Record Contribution",
+  "amount": "Amount",
+
+  "requestLoan": "Request Loan",
+  "loanAmount": "Loan Amount",
+  "purpose": "Purpose",
+  "interestRate": "Interest Rate",
+  "duration": "Duration",
+  "approve": "Approve",
+  "reject": "Reject",
+
+  "generateReport": "Generate Report",
+  "shareReport": "Share Report",
+
+  "active": "Active",
+  "pending": "Pending",
+  "completed": "Completed",
+  "approved": "Approved",
+  "rejected": "Rejected",
+
+  "noGroups": "No Groups Yet",
+  "noLoans": "No Loans",
+  "noNotifications": "No Notifications",
+  "noContributions": "No Contributions",
+
+  "cancel": "Cancel",
+  "save": "Save",
+  "delete": "Delete",
+  "confirm": "Confirm",
+  "back": "Back",
+
+  "errorRequired": "This field is required",
+  "errorInvalidEmail": "Enter a valid email",
+  "errorPasswordShort": "Min 8 characters",
+  "errorPasswordMismatch": "Passwords do not match",
+
+  "currency": "RWF",
+  "payoutCycle": "Payout Cycle",
+  "nextContribution": "Next Contribution",
+  "payoutPosition": "Payout Position",
+  "roundNumber": "Round {number}",
+  "@roundNumber": {
+    "placeholders": {
+      "number": { "type": "int" }
+    }
+  }
+}

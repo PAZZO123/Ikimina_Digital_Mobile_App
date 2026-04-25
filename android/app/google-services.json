@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1038490095433",
+    "project_id": "ikimina-digitalized",
+    "storage_bucket": "ikimina-digitalized.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1038490095433:android:9a4c9a2e1b5ae1db975498",
+        "android_client_info": {
+          "package_name": "com.ikimina.digital"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBaKYbbrbMWEKI8MYp63DN4jAEiqjZ4fio"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

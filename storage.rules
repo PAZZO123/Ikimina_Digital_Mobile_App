@@ -1,0 +1,48 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // Helper
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    function isImageFile() {
+      return request.resource.contentType.matches('image/.*');
+    }
+
+    function isUnder5MB() {
+      return request.resource.size < 5 * 1024 * 1024;
+    }
+
+    // ─── User profile pictures ───
+    match /users/{userId}/profile{ext} {
+      allow read: if isSignedIn();
+      allow write: if isOwner(userId) && isImageFile() && isUnder5MB();
+      allow delete: if isOwner(userId);
+    }
+
+    // ─── Group cover images ───
+    match /groups/{groupId}/cover{ext} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn() && isImageFile() && isUnder5MB();
+      allow delete: if isSignedIn();
+    }
+
+    // ─── Contribution receipts ───
+    match /receipts/{contributionId}{ext} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn() && isImageFile() && isUnder5MB();
+      allow delete: if isSignedIn();
+    }
+
+    // Block everything else
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

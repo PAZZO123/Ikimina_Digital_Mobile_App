@@ -1,0 +1,346 @@
+{
+  "@@locale": "fr",
+  "appName": "Ikimina Digital",
+
+  "welcome": "Bon retour",
+  "signIn": "Se connecter",
+  "signOut": "Se déconnecter",
+  "createAccount": "Créer un compte",
+  "forgotPassword": "Mot de passe oublié ?",
+  "email": "Adresse e-mail",
+  "password": "Mot de passe",
+  "confirmPassword": "Confirmer le mot de passe",
+  "fullName": "Nom complet",
+  "phone": "Numéro de téléphone",
+
+  "dashboard": "Tableau de bord",
+  "groups": "Groupes",
+  "loans": "Prêts",
+  "profile": "Profil",
+  "notifications": "Notifications",
+  "reports": "Rapports",
+
+  "myGroups": "Mes Groupes",
+  "createGroup": "Créer un groupe",
+  "joinGroup": "Rejoindre un groupe",
+  "groupName": "Nom du groupe",
+  "groupDescription": "Description",
+  "contributionAmount": "Montant de la cotisation",
+  "contributionFrequency": "Fréquence",
+  "startDate": "Date de début",
+  "inviteCode": "Code d'invitation",
+  "members": "Membres",
+
+  "weekly": "Hebdomadaire",
+  "biweekly": "Bihebdomadaire",
+  "monthly": "Mensuel",
+
+  "totalBalance": "Solde total",
+  "totalContributed": "Total cotisé",
+  "totalLoaned": "Total prêté",
+
+  "recordContribution": "Enregistrer la cotisation",
+  "amount": "Montant",
+
+  "requestLoan": "Demander un prêt",
+  "loanAmount": "Montant du prêt",
+  "purpose": "Objet",
+  "interestRate": "Taux d'intérêt",
+  "duration": "Durée",
+  "approve": "Approuver",
+  "reject": "Rejeter",
+
+  "generateReport": "Générer un rapport",
+  "shareReport": "Partager le rapport",
+
+  "active": "Actif",
+  "pending": "En attente",
+  "completed": "Terminé",
+  "approved": "Approuvé",
+  "rejected": "Rejeté",
+
+  "noGroups": "Aucun groupe",
+  "noLoans": "Aucun prêt",
+  "noNotifications": "Aucune notification",
+  "noContributions": "Aucune cotisation",
+
+  "cancel": "Annuler",
+  "save": "Enregistrer",
+  "delete": "Supprimer",
+  "confirm": "Confirmer",
+  "back": "Retour",
+
+  "errorRequired": "Ce champ est obligatoire",
+  "errorInvalidEmail": "Entrez un e-mail valide",
+  "errorPasswordShort": "Min 8 caractères",
+  "errorPasswordMismatch": "Les mots de passe ne correspondent pas",
+
+  "currency": "RWF",
+  "payoutCycle": "Cycle de paiement",
+  "nextContribution": "Prochaine cotisation",
+  "payoutPosition": "Position de paiement",
+
+  "signInSubtitle": "Connectez-vous pour gérer vos groupes d'épargne",
+  "accountInfo": "Informations du compte",
+  "settings": "Paramètres",
+  "account": "Compte",
+  "language": "Langue",
+  "pushNotifications": "Notifications push",
+  "biometricLogin": "Connexion biométrique",
+  "changePassword": "Changer le mot de passe",
+  "deleteAccount": "Supprimer le compte",
+  "quickActions": "Actions rapides",
+  "contribute": "Cotiser",
+  "newGroup": "Nouveau groupe",
+  "balance": "Solde",
+  "contribution": "Cotisation",
+  "seeAll": "Voir tout",
+  "joinWithCode": "Rejoindre avec un code",
+  "noAccountYet": "Pas encore de compte ?",
+  "memberId": "ID Membre",
+  "loanOverview": "Aperçu des prêts",
+  "totalLoanedOut": "Total prêté",
+  "availableBalance": "Solde disponible",
+  "needLoan": "Besoin d'un prêt ?",
+  "borrowFromGroup": "Empruntez auprès des économies de votre groupe",
+  "recentLoans": "Prêts récents",
+
+  "registerSubtitle": "Rejoignez Ikimina Digital et gérez vos épargnes",
+  "alreadyHaveAccount": "Vous avez déjà un compte ?",
+  "signInLink": "Se connecter",
+  "iAgreeToThe": "J'accepte les ",
+  "termsOfService": "Conditions d'utilisation",
+  "andWord": " et la ",
+  "privacyPolicy": "Politique de confidentialité",
+  "acceptTermsError": "Veuillez accepter les conditions d'utilisation",
+  "nameRequired": "Le nom est obligatoire",
+  "enterFirstLastName": "Entrez votre prénom et nom",
+  "phoneRequired": "Le téléphone est obligatoire",
+  "enterValidPhone": "Entrez un numéro valide",
+  "passwordRequired": "Le mot de passe est obligatoire",
+  "resetPassword": "Réinitialiser le mot de passe",
+  "resetPasswordInstructions": "Entrez votre adresse e-mail et nous vous enverrons un lien pour réinitialiser votre mot de passe.",
+  "sendResetLink": "Envoyer le lien",
+  "checkYourEmail": "Vérifiez vos e-mails",
+  "backToSignIn": "Retour à la connexion",
+  "skip": "Passer",
+  "continueBtnLabel": "Continuer",
+  "getStarted": "Commencer",
+  "onboardingTitle1": "Créez votre Ikimina",
+  "onboardingSubtitle1": "Démarrez ou rejoignez un groupe d'épargne numérique avec famille, amis ou collègues.",
+  "onboardingTitle2": "Suivez chaque franc",
+  "onboardingSubtitle2": "Enregistrez les cotisations, suivez les soldes et consultez l'historique financier en temps réel.",
+  "onboardingTitle3": "Paiements transparents",
+  "onboardingSubtitle3": "La planification automatique des rotations garantit que chacun a son tour équitablement.",
+  "onboardingTitle4": "Rapports instantanés",
+  "onboardingSubtitle4": "Téléchargez des rapports financiers PDF professionnels pour une transparence totale.",
+  "loadingDashboard": "Chargement du tableau de bord...",
+  "totalBalanceAllGroups": "Solde total de tous les groupes",
+  "activeGroups": "Groupes actifs",
+  "groupBalanceOverview": "Aperçu des soldes des groupes",
+  "allGroupsLabel": "Tous les groupes",
+  "noData": "Aucune donnée",
+  "completeYourProfile": "Complétez votre profil",
+  "completeProfileInstructions": "Veuillez remplir vos informations pour compléter la configuration de votre compte.",
+  "loadingGroups": "Chargement des groupes...",
+  "joinAGroup": "Rejoindre un groupe",
+  "joinGroupInstructions": "Entrez le code d'invitation à 6 caractères partagé par l'administrateur du groupe.",
+  "enterValidCode": "Veuillez entrer un code d'invitation à 6 caractères.",
+  "requestSentWaiting": "Demande envoyée ! En attente de l'approbation de l'administrateur.",
+  "sendRequest": "Envoyer la demande",
+  "payoutCycleProgress": "Progression du cycle de paiement",
+  "groupNotFound": "Groupe introuvable",
+  "joinRequests": "Demandes d'adhésion",
+  "processPayout": "Traiter le paiement",
+  "issueFine": "Émettre une amende",
+  "shareInviteCode": "Partager le code d'invitation",
+  "tabOverview": "Aperçu",
+  "tabContribute": "Cotiser",
+  "tabPayouts": "Paiements",
+  "processPayoutQuestion": "Traiter le paiement ?",
+  "contributed": "Cotisé",
+  "loanedOut": "Prêté",
+  "progress": "Progression",
+  "perContribution": "Par cotisation",
+  "viewAllMembers": "Voir tous les membres",
+  "noContributionsSubtitle": "Les cotisations apparaîtront ici une fois enregistrées.",
+  "recordLabel": "Enregistrer",
+  "noLoansYet": "Aucun prêt",
+  "noLoansSubtitle": "Tout membre peut demander un prêt. L'admin approuve ou rejette.",
+  "you": "Vous",
+  "noPurpose": "Aucun motif indiqué",
+  "adminAction": "Action admin :",
+  "awaitingApproval": "En attente de l'approbation de l'admin",
+  "payoutRotation": "Rotation des paiements",
+  "nextLabel": "SUIVANT",
+  "paidLabel": "Payé",
+  "noPendingRequests": "Aucune demande d'adhésion",
+  "copyCode": "Copier le code",
+  "copyMessage": "Copier le message",
+  "inviteCodeCopied": "Code d'invitation copié !",
+  "inviteMessageCopied": "Message d'invitation copié ! Collez-le dans WhatsApp ou SMS.",
+  "codeCopied": "Code copié !",
+  "payoutProcessed": "Paiement traité avec succès !",
+  "createNewGroup": "Créer un nouveau groupe",
+  "groupDetails": "Détails du groupe",
+  "contributionRules": "Règles de cotisation",
+  "summaryLabel": "Résumé",
+  "createGroupAdminNote": "Vous serez l'administrateur de ce groupe. Un code d'invitation sera généré automatiquement.",
+  "allocation": "Allocation",
+  "available": "Disponible",
+  "loanedOutLabel": "Prêté",
+  "requestLabel": "Demander",
+  "joinGroupForLoans": "Rejoignez ou créez un groupe pour accéder aux fonctionnalités de prêt.",
+  "requestALoan": "Demander un prêt",
+  "purposeOfLoan": "Objet du prêt",
+  "repaymentSummary": "Résumé du remboursement",
+  "principal": "Principal",
+  "totalToRepay": "Total à rembourser",
+  "monthlyPayment": "Mensualité",
+  "submitLoanRequest": "Soumettre la demande de prêt",
+  "loanDetails": "Détails du prêt",
+  "borrower": "Emprunteur",
+  "statusLabel": "Statut",
+  "dueDate": "Date d'échéance",
+  "makeRepayment": "Effectuer un remboursement",
+  "repaymentRecorded": "Remboursement enregistré avec succès !",
+  "loanRequestSubmitted": "Demande de prêt soumise !",
+  "amountRWF": "Montant (RWF)",
+  "loanAmountRWF": "Montant du prêt (RWF)",
+  "contributionAmountRWF": "Montant de la cotisation (RWF)",
+  "notesOptional": "Notes (optionnel)",
+  "amountRequired": "Le montant est obligatoire",
+  "enterValidAmount": "Entrez un montant valide",
+  "descriptionRequired": "La description est obligatoire",
+  "markAllRead": "Tout marquer comme lu",
+  "allCaughtUp": "Vous êtes à jour !",
+  "financialReports": "Rapports financiers",
+  "noReports": "Aucun rapport disponible",
+  "noReportsSubtitle": "Rejoignez ou créez un groupe pour générer des rapports financiers.",
+  "pdfReports": "Rapports PDF",
+  "pdfReportsDescription": "Générez des états financiers complets pour la transparence et l'audit.",
+  "generating": "Génération...",
+  "download": "Télécharger",
+  "sharePDF": "Partager le PDF",
+  "recordContributionTitle": "Enregistrer la cotisation",
+  "groupMembersTitle": "Membres du groupe",
+  "recordingFor": "Enregistrement pour",
+  "selectGroup": "Sélectionnez un groupe",
+  "payoutPositionLabel": "Position de paiement : #{pos}",
+  "@payoutPositionLabel": {
+    "placeholders": {
+      "pos": { "type": "int" }
+    }
+  },
+  "resetLinkSentTo": "Nous avons envoyé un lien de réinitialisation à {email}",
+  "@resetLinkSentTo": {
+    "placeholders": {
+      "email": { "type": "String" }
+    }
+  },
+  "interestRateValue": "Taux d'intérêt : {rate}%",
+  "@interestRateValue": {
+    "placeholders": {
+      "rate": { "type": "String" }
+    }
+  },
+  "repaymentDurationValue": "Durée de remboursement : {months} mois",
+  "@repaymentDurationValue": {
+    "placeholders": {
+      "months": { "type": "int" }
+    }
+  },
+  "interestWithRate": "Intérêts ({rate}%)",
+  "@interestWithRate": {
+    "placeholders": {
+      "rate": { "type": "String" }
+    }
+  },
+  "remainingAmount": "Restant : {amount}",
+  "@remainingAmount": {
+    "placeholders": {
+      "amount": { "type": "String" }
+    }
+  },
+  "pendingJoinRequests": "{count} demande d'adhésion en attente",
+  "@pendingJoinRequests": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+
+  "roundNumber": "Tour {number}",
+  "@roundNumber": {
+    "placeholders": {
+      "number": { "type": "int" }
+    }
+  },
+
+  "loanRules": "Règles de prêt",
+  "loanRulesSubtitle": "Ces règles régissent la façon dont les membres peuvent emprunter dans ce groupe.",
+  "defaultInterestRate": "Intérêt par défaut (%)",
+  "maxRepaymentMonths": "Remboursement max (mois)",
+  "loanPenaltyRate": "Pénalité de retard (%)",
+  "penaltyGraceDays": "Période de grâce (jours)",
+  "maxLoanMultiplier": "Prêt max (× épargne)",
+  "minContributions": "Cotisations min",
+  "yourSavingsInGroup": "Votre épargne dans ce groupe",
+  "yourBorrowingLimit": "Votre plafond d'emprunt",
+  "interestRateSetByGroup": "Le taux d'intérêt est fixé par l'administrateur du groupe.",
+  "overdue": "EN RETARD",
+  "selectMember": "Sélectionner un membre",
+  "contributionRecorded": "Cotisation enregistrée avec succès !",
+  "loanInsufficientBalance": "Le solde du groupe est insuffisant pour ce prêt.",
+  "loanEligibilityContributions": "Vous avez besoin d'au moins {min} cotisation(s) pour être éligible.",
+  "@loanEligibilityContributions": {
+    "placeholders": {
+      "min": { "type": "int" }
+    }
+  },
+  "loanEligibilityLimit": "Le montant dépasse votre plafond d'emprunt de {limit}.",
+  "@loanEligibilityLimit": {
+    "placeholders": {
+      "limit": { "type": "String" }
+    }
+  },
+
+  "darkMode": "Mode sombre",
+  "sendAnnouncement": "Envoyer une annonce",
+  "announcements": "Annonces",
+  "announcementTitle": "Titre de l'annonce",
+  "announcementMessage": "Message",
+  "announcementHint": "Écrivez un message à tous les membres...",
+  "reactionsTitle": "Réactions",
+  "noAnnouncements": "Aucune annonce pour le moment",
+  "noAnnouncementsSubtitle": "En tant qu'admin, vous pouvez envoyer des annonces à tous les membres.",
+  "sendAnnouncementSuccess": "Annonce envoyée à tous les membres !",
+  "viewReactions": "Voir les réactions",
+  "noReactionsYet": "Aucune réaction pour l'instant",
+  "titleRequired": "Le titre est obligatoire",
+  "messageRequired": "Le message est obligatoire",
+  "reactionCount": "{count} réaction(s)",
+  "@reactionCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "broadcastFrom": "De {name}",
+  "@broadcastFrom": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+
+  "submitContribution": "Soumettre une Contribution",
+  "contributionRequestSent": "Demande envoyée ! En attente de l'approbation de l'administrateur.",
+  "contributionRequestInfo": "Votre contribution sera ajoutée au solde du groupe une fois approuvée par l'administrateur.",
+  "pendingApprovals": "Approbations en attente",
+  "approved": "Approuvé",
+  "myTotalContributions": "Mes Contributions",
+
+  "submitRepayment": "Soumettre un Remboursement",
+  "repaymentRequestSent": "Remboursement soumis ! En attente d'approbation.",
+  "repaymentPending": "Un remboursement est en attente d'approbation.",
+  "pendingRepayments": "Remboursements en attente",
+  "amountRWF": "Montant (RWF)"
+}

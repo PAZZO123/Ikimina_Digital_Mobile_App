@@ -1,0 +1,346 @@
+{
+  "@@locale": "rw",
+  "appName": "Ikimina Digital",
+
+  "welcome": "Murakaza neza",
+  "signIn": "Injira",
+  "signOut": "Sohoka",
+  "createAccount": "Fungura Konti",
+  "forgotPassword": "Wibagiwe ijambo banga?",
+  "email": "Imeyili",
+  "password": "Ijambo banga",
+  "confirmPassword": "Emeza ijambo banga",
+  "fullName": "Amazina yose",
+  "phone": "Nomero ya telefoni",
+
+  "dashboard": "Imbonerahamwe",
+  "groups": "Amatsinda",
+  "loans": "Inguzanyo",
+  "profile": "Umwirondoro",
+  "notifications": "Imenyesha",
+  "reports": "Raporo",
+
+  "myGroups": "Amatsinda yanjye",
+  "createGroup": "Shiraho itsinda",
+  "joinGroup": "Injira mu itsinda",
+  "groupName": "Izina ry'itsinda",
+  "groupDescription": "Ibisobanuro",
+  "contributionAmount": "Ingano y'umusanzu",
+  "contributionFrequency": "Igihe cy'umusanzu",
+  "startDate": "Itariki yo gutangira",
+  "inviteCode": "Kode yo gutumanahana",
+  "members": "Abanyamuryango",
+
+  "weekly": "Buri cyumweru",
+  "biweekly": "Buri cyumweru bibiri",
+  "monthly": "Buri kwezi",
+
+  "totalBalance": "Igiteranyo cy'amafaranga",
+  "totalContributed": "Yatanzwe yose",
+  "totalLoaned": "Inguzanyo zose",
+
+  "recordContribution": "Andika umusanzu",
+  "amount": "Ingano",
+
+  "requestLoan": "Saba inguzanyo",
+  "loanAmount": "Ingano y'inguzanyo",
+  "purpose": "Impamvu",
+  "interestRate": "Inyungu",
+  "duration": "Igihe",
+  "approve": "Emera",
+  "reject": "Kanga",
+
+  "generateReport": "Tanga raporo",
+  "shareReport": "Sangira raporo",
+
+  "active": "Ikora",
+  "pending": "Itegereje",
+  "completed": "Yarangiye",
+  "approved": "Yemejwe",
+  "rejected": "Yanzwe",
+
+  "noGroups": "Nta matsinda nawe",
+  "noLoans": "Nta nguzanyo",
+  "noNotifications": "Nta menyesha",
+  "noContributions": "Nta misanzu",
+
+  "cancel": "Hagarika",
+  "save": "Bika",
+  "delete": "Siba",
+  "confirm": "Emeza",
+  "back": "Subira inyuma",
+
+  "errorRequired": "Iki gice kirashyirwaho",
+  "errorInvalidEmail": "Injiza imeyili nyayo",
+  "errorPasswordShort": "Byibura inyuguti 8",
+  "errorPasswordMismatch": "Amagambo banga ntahuye",
+
+  "currency": "RWF",
+  "payoutCycle": "Inzira yo kwishyura",
+  "nextContribution": "Umusanzu ukurikira",
+  "payoutPosition": "Urutonde rwo kwishyurwa",
+
+  "signInSubtitle": "Injira gucunga amatsinda yawe yo gukora ubworo",
+  "accountInfo": "Amakuru y'Konti",
+  "settings": "Igenamiterere",
+  "account": "Konti",
+  "language": "Ururimi",
+  "pushNotifications": "Imenyesha y'imbaho",
+  "biometricLogin": "Kwinjira na Biometrike",
+  "changePassword": "Hindura ijambo banga",
+  "deleteAccount": "Siba konti",
+  "quickActions": "Ibikorwa Byihuse",
+  "contribute": "Tanga Umusanzu",
+  "newGroup": "Itsinda Rishya",
+  "balance": "Amafaranga",
+  "contribution": "Umusanzu",
+  "seeAll": "Reba byose",
+  "joinWithCode": "Injira hamwe na kode",
+  "noAccountYet": "Nta konti ufite?",
+  "memberId": "Indangamuntu",
+  "loanOverview": "Incamake y'inguzanyo",
+  "totalLoanedOut": "Inguzanyo zatanzwe",
+  "availableBalance": "Amafaranga aboneka",
+  "needLoan": "Ukeneye inguzanyo?",
+  "borrowFromGroup": "Saba inguzanyo mu mafaranga y'itsinda",
+  "recentLoans": "Inguzanyo za vuba",
+
+  "registerSubtitle": "Injira muri Ikimina Digital ugucunge amafaranga yawe",
+  "alreadyHaveAccount": "Ufite konti?",
+  "signInLink": "Injira",
+  "iAgreeToThe": "Nemeye ",
+  "termsOfService": "Amabwiriza y'Imikoreshereze",
+  "andWord": " na ",
+  "privacyPolicy": "Politiki y'Ubuzima bwite",
+  "acceptTermsError": "Emera amabwiriza y'imikoreshereze",
+  "nameRequired": "Izina rirasabwa",
+  "enterFirstLastName": "Injiza izina n'irindi",
+  "phoneRequired": "Telefoni irasabwa",
+  "enterValidPhone": "Injiza nomero nyayo",
+  "passwordRequired": "Ijambo banga rirasabwa",
+  "resetPassword": "Hindura Ijambo Banga",
+  "resetPasswordInstructions": "Injiza imeyili yawe kandi tuzakoherereza uhuza wo gusubiramo ijambo banga.",
+  "sendResetLink": "Ohereza Uhuza",
+  "checkYourEmail": "Reba Imeyili Yawe",
+  "backToSignIn": "Garuka guinjira",
+  "skip": "Reka",
+  "continueBtnLabel": "Komeza",
+  "getStarted": "Tangira",
+  "onboardingTitle1": "Shiraho Ikimina Ryawe",
+  "onboardingSubtitle1": "Tangira cyangwa injira mu itsinda ry'ubworo bw'ikoranabuhanga hamwe n'umuryango, inshuti cyangwa abakozi.",
+  "onboardingTitle2": "Kurikirana Amafaranga Yose",
+  "onboardingSubtitle2": "Andika imisanzu, kureba amafaranga, no kureba akaheka k'amafaranga mu gihe nyacyo.",
+  "onboardingTitle3": "Kwishyurwa Bisobanutse",
+  "onboardingSubtitle3": "Gahunda y'ubukurikire bwihagije bigorora ko umuntu wese ahabwa uburenganzira bwe.",
+  "onboardingTitle4": "Raporo Zihuse",
+  "onboardingSubtitle4": "Pakurura raporo z'amafaranga z'inzobere mu PDF kugira ngo habeho ubusobanuro bwuzuye.",
+  "loadingDashboard": "Gupakurura...",
+  "totalBalanceAllGroups": "Igiteranyo cy'amafaranga mu matsinda yose",
+  "activeGroups": "Amatsinda akora",
+  "groupBalanceOverview": "Incamake y'amafaranga y'amatsinda",
+  "allGroupsLabel": "Amatsinda yose",
+  "noData": "Nta makuru",
+  "completeYourProfile": "Uzuza Umwirondoro Wawe",
+  "completeProfileInstructions": "Injiza amakuru yawe kugira ngo uzuze gushiraho konti.",
+  "loadingGroups": "Gupakurura amatsinda...",
+  "joinAGroup": "Injira mu Itsinda",
+  "joinGroupInstructions": "Injiza kode yo gutumanahana y'inyuguti 6 yahawe na nyir'itsinda.",
+  "enterValidCode": "Injiza kode y'inyuguti 6 nyayo.",
+  "requestSentWaiting": "Icyifuzo cyoherejwe! Tegereza ko nyir'itsinda akemera.",
+  "sendRequest": "Ohereza Icyifuzo",
+  "payoutCycleProgress": "Aho Inzira yo Kwishyura Igeze",
+  "groupNotFound": "Itsinda ntiryabonetse",
+  "joinRequests": "Ibyifuzo byo kwinjira",
+  "processPayout": "Shyira Kwishyura",
+  "issueFine": "Tanga Ihazabu",
+  "shareInviteCode": "Sangira Kode yo Gutumanahana",
+  "tabOverview": "Incamake",
+  "tabContribute": "Tanga Umusanzu",
+  "tabPayouts": "Kwishyura",
+  "processPayoutQuestion": "Shyira Kwishyura?",
+  "contributed": "Yatanzwe",
+  "loanedOut": "Inguzanyo",
+  "progress": "Aho bigeze",
+  "perContribution": "Ku musanzu",
+  "viewAllMembers": "Reba Abanyamuryango Bose",
+  "noContributionsSubtitle": "Imisanzu izagaragara hano igihe yazanditswe.",
+  "recordLabel": "Andika",
+  "noLoansYet": "Nta nguzanyo nawe",
+  "noLoansSubtitle": "Umunyamuryango wese ashobora gusaba inguzanyo. Nyir'itsinda aremera cyangwa akanga.",
+  "you": "Wowe",
+  "noPurpose": "Nta mpamvu yatanzwe",
+  "adminAction": "Igikorwa cy'umunyamabanga:",
+  "awaitingApproval": "Gutegereza kwemererwa",
+  "payoutRotation": "Ibyerekeye Ubukurikire bwo Kwishyura",
+  "nextLabel": "UKURIKIRA",
+  "paidLabel": "Wishyuwe",
+  "noPendingRequests": "Nta bibyifuzo byo kwinjira bitegereje",
+  "copyCode": "Kopa Kode",
+  "copyMessage": "Kopa Ubutumwa",
+  "inviteCodeCopied": "Kode yo gutumanahana yakopejwe!",
+  "inviteMessageCopied": "Ubutumwa bwo gutumanahana bwakopejwe! Bushyire muri WhatsApp cyangwa SMS.",
+  "codeCopied": "Kode yakopejwe!",
+  "payoutProcessed": "Kwishyura byagenze neza!",
+  "createNewGroup": "Shiraho Itsinda Rishya",
+  "groupDetails": "Amakuru y'Itsinda",
+  "contributionRules": "Amabwiriza y'Imisanzu",
+  "summaryLabel": "Incamake",
+  "createGroupAdminNote": "Uzaba umunyamabanga w'itsinda. Kode yo gutumanahana izakozwa mu buryo bwihagije.",
+  "allocation": "Ikwiragira",
+  "available": "Iboneka",
+  "loanedOutLabel": "Iguzanyo",
+  "requestLabel": "Saba",
+  "joinGroupForLoans": "Injira cyangwa shiraho itsinda kugira ngo ubone inguzanyo.",
+  "requestALoan": "Saba Inguzanyo",
+  "purposeOfLoan": "Impamvu y'Inguzanyo",
+  "repaymentSummary": "Incamake y'Ubwishyu",
+  "principal": "Inkomoko",
+  "totalToRepay": "Igiteranyo cy'Ubwishyu",
+  "monthlyPayment": "Ubwishyu bwa Buri Kwezi",
+  "submitLoanRequest": "Ohereza Icyifuzo cy'Inguzanyo",
+  "loanDetails": "Amakuru y'Inguzanyo",
+  "borrower": "Usaba Inguzanyo",
+  "statusLabel": "Imimerere",
+  "dueDate": "Itariki yo Kwishyura",
+  "makeRepayment": "Ishyura",
+  "repaymentRecorded": "Ubwishyu bwanditswe neza!",
+  "loanRequestSubmitted": "Icyifuzo cy'inguzanyo cyoherejwe!",
+  "amountRWF": "Ingano (RWF)",
+  "loanAmountRWF": "Ingano y'Inguzanyo (RWF)",
+  "contributionAmountRWF": "Ingano y'Umusanzu (RWF)",
+  "notesOptional": "Ibindi bisobanuro (ntabwo bisabwa)",
+  "amountRequired": "Ingano irasabwa",
+  "enterValidAmount": "Injiza ingano nyayo",
+  "descriptionRequired": "Ibisobanuro birasabwa",
+  "markAllRead": "Shyira byose nk'ibisomwe",
+  "allCaughtUp": "Nta gishya!",
+  "financialReports": "Raporo z'Amafaranga",
+  "noReports": "Nta raporo zihari",
+  "noReportsSubtitle": "Injira cyangwa shiraho itsinda kugira ngo ukore raporo z'amafaranga.",
+  "pdfReports": "Raporo PDF",
+  "pdfReportsDescription": "Kora imenyesha y'amafaranga yuzuye ku busobanuro no gusuzuma.",
+  "generating": "Bakora...",
+  "download": "Pakurura",
+  "sharePDF": "Sangira PDF",
+  "recordContributionTitle": "Andika Umusanzu",
+  "groupMembersTitle": "Abanyamuryango b'Itsinda",
+  "recordingFor": "Wandikira",
+  "selectGroup": "Hitamo itsinda",
+  "payoutPositionLabel": "Urutonde rwo kwishyurwa: #{pos}",
+  "@payoutPositionLabel": {
+    "placeholders": {
+      "pos": { "type": "int" }
+    }
+  },
+  "resetLinkSentTo": "Twakohereye uhuza ku {email}",
+  "@resetLinkSentTo": {
+    "placeholders": {
+      "email": { "type": "String" }
+    }
+  },
+  "interestRateValue": "Inyungu: {rate}%",
+  "@interestRateValue": {
+    "placeholders": {
+      "rate": { "type": "String" }
+    }
+  },
+  "repaymentDurationValue": "Igihe cy'ubwishyu: {months} amezi",
+  "@repaymentDurationValue": {
+    "placeholders": {
+      "months": { "type": "int" }
+    }
+  },
+  "interestWithRate": "Inyungu ({rate}%)",
+  "@interestWithRate": {
+    "placeholders": {
+      "rate": { "type": "String" }
+    }
+  },
+  "remainingAmount": "Hasigaye: {amount}",
+  "@remainingAmount": {
+    "placeholders": {
+      "amount": { "type": "String" }
+    }
+  },
+  "pendingJoinRequests": "Ibyifuzo {count} bitegereje",
+  "@pendingJoinRequests": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+
+  "roundNumber": "Inzira {number}",
+  "@roundNumber": {
+    "placeholders": {
+      "number": { "type": "int" }
+    }
+  },
+
+  "loanRules": "Amabwiriza y'Inguzanyo",
+  "loanRulesSubtitle": "Aya mabwiriza agenga uburyo abanyamuryango bashobora gutiza mu itsinda.",
+  "defaultInterestRate": "Inyungu isanzwe (%)",
+  "maxRepaymentMonths": "Amezi menshi y'ubwishyu",
+  "loanPenaltyRate": "Igihano cy'ubukererwe (%)",
+  "penaltyGraceDays": "Iminsi yo gutegereza",
+  "maxLoanMultiplier": "Inguzanyo ntarengwa (× ubworo)",
+  "minContributions": "Imisanzu ntarengwa",
+  "yourSavingsInGroup": "Ubworo bwawe mu itsinda",
+  "yourBorrowingLimit": "Ingano y'inguzanyo ushobora guhabwa",
+  "interestRateSetByGroup": "Inyungu ishyirwaho na nyir'itsinda kandi ntishobora guhindurwa.",
+  "overdue": "IRARENZE",
+  "selectMember": "Hitamo Umunyamuryango",
+  "contributionRecorded": "Umusanzu wanditswe neza!",
+  "loanInsufficientBalance": "Amafaranga y'itsinda ntahagije kuri iyi nguzanyo.",
+  "loanEligibilityContributions": "Ukeneye byibuze imisanzu {min} kugira ngo wishyuriwe.",
+  "@loanEligibilityContributions": {
+    "placeholders": {
+      "min": { "type": "int" }
+    }
+  },
+  "loanEligibilityLimit": "Ingano irenze ingano y'inguzanyo ushobora guhabwa y'amafaranga {limit}.",
+  "@loanEligibilityLimit": {
+    "placeholders": {
+      "limit": { "type": "String" }
+    }
+  },
+
+  "darkMode": "Umwijima",
+  "sendAnnouncement": "Ohereza Itangazo",
+  "announcements": "Itangazo",
+  "announcementTitle": "Umutwe w'itangazo",
+  "announcementMessage": "Ubutumwa",
+  "announcementHint": "Andika ubutumwa ku banyamuryango bose...",
+  "reactionsTitle": "Ibisubizo",
+  "noAnnouncements": "Nta tangazo rihari",
+  "noAnnouncementsSubtitle": "Nka munyamabanga, ushobora kohereza itangazo ku banyamuryango bose.",
+  "sendAnnouncementSuccess": "Itangazo ryoherejwe ku banyamuryango bose!",
+  "viewReactions": "Reba Ibisubizo",
+  "noReactionsYet": "Nta bisubizo nawe",
+  "titleRequired": "Umutwe urasabwa",
+  "messageRequired": "Ubutumwa burasabwa",
+  "reactionCount": "Ibisubizo {count}",
+  "@reactionCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "broadcastFrom": "Kuva kuri {name}",
+  "@broadcastFrom": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+
+  "submitContribution": "Ohereza Umusanzu",
+  "contributionRequestSent": "Icyifuzo cyoherejwe! Gutegereza kwemeza kw'umuyobozi.",
+  "contributionRequestInfo": "Umusanzu wawe uzongererwa inyungu y'itsinda nyuma yo kwemezwa n'umuyobozi.",
+  "pendingApprovals": "Gutegereza Kwemeza",
+  "approved": "Byemejwe",
+  "myTotalContributions": "Amafaranga Natoye",
+
+  "submitRepayment": "Ohereza Kwishyura",
+  "repaymentRequestSent": "Kwishyura byoherejwe! Gutegereza kwemeza.",
+  "repaymentPending": "Hari kwishyura gutegereza kwemezwa.",
+  "pendingRepayments": "Kwishyura Gutegereza",
+  "amountRWF": "Amafaranga (RWF)"
+}

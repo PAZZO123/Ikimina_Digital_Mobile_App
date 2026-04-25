@@ -1,0 +1,88 @@
+{
+  "@@locale": "fr",
+  "appName": "Ikimina Digital",
+
+  "welcome": "Bon retour",
+  "signIn": "Se connecter",
+  "signOut": "Se déconnecter",
+  "createAccount": "Créer un compte",
+  "forgotPassword": "Mot de passe oublié ?",
+  "email": "Adresse e-mail",
+  "password": "Mot de passe",
+  "confirmPassword": "Confirmer le mot de passe",
+  "fullName": "Nom complet",
+  "phone": "Numéro de téléphone",
+
+  "dashboard": "Tableau de bord",
+  "groups": "Groupes",
+  "loans": "Prêts",
+  "profile": "Profil",
+  "notifications": "Notifications",
+  "reports": "Rapports",
+
+  "myGroups": "Mes Groupes",
+  "createGroup": "Créer un groupe",
+  "joinGroup": "Rejoindre un groupe",
+  "groupName": "Nom du groupe",
+  "groupDescription": "Description",
+  "contributionAmount": "Montant de la cotisation",
+  "contributionFrequency": "Fréquence",
+  "startDate": "Date de début",
+  "inviteCode": "Code d'invitation",
+  "members": "Membres",
+
+  "weekly": "Hebdomadaire",
+  "biweekly": "Bihebdomadaire",
+  "monthly": "Mensuel",
+
+  "totalBalance": "Solde total",
+  "totalContributed": "Total cotisé",
+  "totalLoaned": "Total prêté",
+
+  "recordContribution": "Enregistrer la cotisation",
+  "amount": "Montant",
+
+  "requestLoan": "Demander un prêt",
+  "loanAmount": "Montant du prêt",
+  "purpose": "Objet",
+  "interestRate": "Taux d'intérêt",
+  "duration": "Durée",
+  "approve": "Approuver",
+  "reject": "Rejeter",
+
+  "generateReport": "Générer un rapport",
+  "shareReport": "Partager le rapport",
+
+  "active": "Actif",
+  "pending": "En attente",
+  "completed": "Terminé",
+  "approved": "Approuvé",
+  "rejected": "Rejeté",
+
+  "noGroups": "Aucun groupe",
+  "noLoans": "Aucun prêt",
+  "noNotifications": "Aucune notification",
+  "noContributions": "Aucune cotisation",
+
+  "cancel": "Annuler",
+  "save": "Enregistrer",
+  "delete": "Supprimer",
+  "confirm": "Confirmer",
+  "back": "Retour",
+
+  "errorRequired": "Ce champ est obligatoire",
+  "errorInvalidEmail": "Entrez un e-mail valide",
+  "errorPasswordShort": "Min 8 caractères",
+  "errorPasswordMismatch": "Les mots de passe ne correspondent pas",
+
+  "currency": "RWF",
+  "payoutCycle": "Cycle de paiement",
+  "nextContribution": "Prochaine cotisation",
+  "payoutPosition": "Position de paiement",
+  "roundNumber": "Tour {number}",
+  "@roundNumber": {
+    "placeholders": {
+      "number": { "type": "int" }
+    }
+  }
+}

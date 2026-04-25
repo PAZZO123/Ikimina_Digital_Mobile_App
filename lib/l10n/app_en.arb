@@ -1,0 +1,347 @@
+{
+  "@@locale": "en",
+  "appName": "Ikimina Digital",
+  "@appName": { "description": "The name of the application" },
+
+  "welcome": "Welcome back",
+  "signIn": "Sign In",
+  "signOut": "Sign Out",
+  "createAccount": "Create Account",
+  "forgotPassword": "Forgot password?",
+  "email": "Email address",
+  "password": "Password",
+  "confirmPassword": "Confirm password",
+  "fullName": "Full name",
+  "phone": "Phone number",
+
+  "dashboard": "Dashboard",
+  "groups": "Groups",
+  "loans": "Loans",
+  "profile": "Profile",
+  "notifications": "Notifications",
+  "reports": "Reports",
+
+  "myGroups": "My Groups",
+  "createGroup": "Create Group",
+  "joinGroup": "Join Group",
+  "groupName": "Group Name",
+  "groupDescription": "Description",
+  "contributionAmount": "Contribution Amount",
+  "contributionFrequency": "Frequency",
+  "startDate": "Start Date",
+  "inviteCode": "Invite Code",
+  "members": "Members",
+
+  "weekly": "Weekly",
+  "biweekly": "Bi-weekly",
+  "monthly": "Monthly",
+
+  "totalBalance": "Total Balance",
+  "totalContributed": "Total Contributed",
+  "totalLoaned": "Total Loaned",
+
+  "recordContribution": "Record Contribution",
+  "amount": "Amount",
+
+  "requestLoan": "Request Loan",
+  "loanAmount": "Loan Amount",
+  "purpose": "Purpose",
+  "interestRate": "Interest Rate",
+  "duration": "Duration",
+  "approve": "Approve",
+  "reject": "Reject",
+
+  "generateReport": "Generate Report",
+  "shareReport": "Share Report",
+
+  "active": "Active",
+  "pending": "Pending",
+  "completed": "Completed",
+  "approved": "Approved",
+  "rejected": "Rejected",
+
+  "noGroups": "No Groups Yet",
+  "noLoans": "No Loans",
+  "noNotifications": "No Notifications",
+  "noContributions": "No Contributions",
+
+  "cancel": "Cancel",
+  "save": "Save",
+  "delete": "Delete",
+  "confirm": "Confirm",
+  "back": "Back",
+
+  "errorRequired": "This field is required",
+  "errorInvalidEmail": "Enter a valid email",
+  "errorPasswordShort": "Min 8 characters",
+  "errorPasswordMismatch": "Passwords do not match",
+
+  "currency": "RWF",
+  "payoutCycle": "Payout Cycle",
+  "nextContribution": "Next Contribution",
+  "payoutPosition": "Payout Position",
+
+  "signInSubtitle": "Sign in to manage your savings groups",
+  "accountInfo": "Account Information",
+  "settings": "Settings",
+  "account": "Account",
+  "language": "Language",
+  "pushNotifications": "Push Notifications",
+  "biometricLogin": "Biometric Login",
+  "changePassword": "Change Password",
+  "deleteAccount": "Delete Account",
+  "quickActions": "Quick Actions",
+  "contribute": "Contribute",
+  "newGroup": "New Group",
+  "balance": "Balance",
+  "contribution": "Contribution",
+  "seeAll": "See all",
+  "joinWithCode": "Join with Code",
+  "noAccountYet": "Don't have an account?",
+  "memberId": "Member ID",
+  "loanOverview": "Loan Overview",
+  "totalLoanedOut": "Total Loaned Out",
+  "availableBalance": "Available Balance",
+  "needLoan": "Need a loan?",
+  "borrowFromGroup": "Borrow from your group's savings",
+  "recentLoans": "Recent Loans",
+
+  "registerSubtitle": "Join Ikimina Digital and manage your savings",
+  "alreadyHaveAccount": "Already have an account?",
+  "signInLink": "Sign in",
+  "iAgreeToThe": "I agree to the ",
+  "termsOfService": "Terms of Service",
+  "andWord": " and ",
+  "privacyPolicy": "Privacy Policy",
+  "acceptTermsError": "Please accept the terms and conditions",
+  "nameRequired": "Name is required",
+  "enterFirstLastName": "Enter first and last name",
+  "phoneRequired": "Phone is required",
+  "enterValidPhone": "Enter a valid phone number",
+  "passwordRequired": "Password is required",
+  "resetPassword": "Reset Password",
+  "resetPasswordInstructions": "Enter your email address and we'll send you a link to reset your password.",
+  "sendResetLink": "Send Reset Link",
+  "checkYourEmail": "Check your email",
+  "backToSignIn": "Back to Sign In",
+  "skip": "Skip",
+  "continueBtnLabel": "Continue",
+  "getStarted": "Get Started",
+  "onboardingTitle1": "Create Your Ikimina",
+  "onboardingSubtitle1": "Start or join a digital savings group with family, friends, or colleagues.",
+  "onboardingTitle2": "Track Every Franc",
+  "onboardingSubtitle2": "Record contributions, monitor balances, and view financial history in real time.",
+  "onboardingTitle3": "Transparent Payouts",
+  "onboardingSubtitle3": "Automated rotation scheduling ensures everyone gets their turn fairly.",
+  "onboardingTitle4": "Instant Reports",
+  "onboardingSubtitle4": "Download professional PDF financial reports for full accountability.",
+  "loadingDashboard": "Loading dashboard...",
+  "totalBalanceAllGroups": "Total Balance Across All Groups",
+  "activeGroups": "Active Groups",
+  "groupBalanceOverview": "Group Balance Overview",
+  "allGroupsLabel": "All groups",
+  "noData": "No data",
+  "completeYourProfile": "Complete Your Profile",
+  "completeProfileInstructions": "Please fill in your details to complete your account setup.",
+  "loadingGroups": "Loading groups...",
+  "joinAGroup": "Join a Group",
+  "joinGroupInstructions": "Enter the 6-character invite code shared by the group admin.",
+  "enterValidCode": "Please enter a 6-character invite code.",
+  "requestSentWaiting": "Request sent! Waiting for admin approval.",
+  "sendRequest": "Send Request",
+  "payoutCycleProgress": "Payout Cycle Progress",
+  "groupNotFound": "Group not found",
+  "joinRequests": "Join Requests",
+  "processPayout": "Process Payout",
+  "issueFine": "Issue Fine",
+  "shareInviteCode": "Share Invite Code",
+  "tabOverview": "Overview",
+  "tabContribute": "Contribute",
+  "tabPayouts": "Payouts",
+  "processPayoutQuestion": "Process Payout?",
+  "contributed": "Contributed",
+  "loanedOut": "Loaned Out",
+  "progress": "Progress",
+  "perContribution": "Per Contribution",
+  "viewAllMembers": "View All Members",
+  "noContributionsSubtitle": "Contributions will appear here once recorded.",
+  "recordLabel": "Record",
+  "noLoansYet": "No Loans Yet",
+  "noLoansSubtitle": "Any member can request a loan. Admin approves or rejects it.",
+  "you": "You",
+  "noPurpose": "No purpose stated",
+  "adminAction": "Admin action:",
+  "awaitingApproval": "Awaiting admin approval",
+  "payoutRotation": "Payout Rotation",
+  "nextLabel": "NEXT",
+  "paidLabel": "Paid",
+  "noPendingRequests": "No pending join requests",
+  "copyCode": "Copy Code",
+  "copyMessage": "Copy Message",
+  "inviteCodeCopied": "Invite code copied!",
+  "inviteMessageCopied": "Invite message copied! Paste it in WhatsApp or SMS.",
+  "codeCopied": "Code copied!",
+  "payoutProcessed": "Payout processed successfully!",
+  "createNewGroup": "Create New Group",
+  "groupDetails": "Group Details",
+  "contributionRules": "Contribution Rules",
+  "summaryLabel": "Summary",
+  "createGroupAdminNote": "You will be the admin of this group. An invite code will be generated automatically.",
+  "allocation": "Allocation",
+  "available": "Available",
+  "loanedOutLabel": "Loaned out",
+  "requestLabel": "Request",
+  "joinGroupForLoans": "Join or create a group to access loan features.",
+  "requestALoan": "Request a Loan",
+  "purposeOfLoan": "Purpose of Loan",
+  "repaymentSummary": "Repayment Summary",
+  "principal": "Principal",
+  "totalToRepay": "Total to Repay",
+  "monthlyPayment": "Monthly Payment",
+  "submitLoanRequest": "Submit Loan Request",
+  "loanDetails": "Loan Details",
+  "borrower": "Borrower",
+  "statusLabel": "Status",
+  "dueDate": "Due Date",
+  "makeRepayment": "Make Repayment",
+  "repaymentRecorded": "Repayment recorded successfully!",
+  "loanRequestSubmitted": "Loan request submitted!",
+  "amountRWF": "Amount (RWF)",
+  "loanAmountRWF": "Loan Amount (RWF)",
+  "contributionAmountRWF": "Contribution Amount (RWF)",
+  "notesOptional": "Notes (optional)",
+  "amountRequired": "Amount is required",
+  "enterValidAmount": "Enter a valid amount",
+  "descriptionRequired": "Description is required",
+  "markAllRead": "Mark all read",
+  "allCaughtUp": "You're all caught up!",
+  "financialReports": "Financial Reports",
+  "noReports": "No Reports Available",
+  "noReportsSubtitle": "Join or create a group to generate financial reports.",
+  "pdfReports": "PDF Reports",
+  "pdfReportsDescription": "Generate comprehensive financial statements for transparency and auditing.",
+  "generating": "Generating...",
+  "download": "Download",
+  "sharePDF": "Share PDF",
+  "recordContributionTitle": "Record Contribution",
+  "groupMembersTitle": "Group Members",
+  "recordingFor": "Recording for",
+  "selectGroup": "Select a group",
+  "payoutPositionLabel": "Payout position: #{pos}",
+  "@payoutPositionLabel": {
+    "placeholders": {
+      "pos": { "type": "int" }
+    }
+  },
+  "resetLinkSentTo": "We sent a reset link to {email}",
+  "@resetLinkSentTo": {
+    "placeholders": {
+      "email": { "type": "String" }
+    }
+  },
+  "interestRateValue": "Interest Rate: {rate}%",
+  "@interestRateValue": {
+    "placeholders": {
+      "rate": { "type": "String" }
+    }
+  },
+  "repaymentDurationValue": "Repayment Duration: {months} months",
+  "@repaymentDurationValue": {
+    "placeholders": {
+      "months": { "type": "int" }
+    }
+  },
+  "interestWithRate": "Interest ({rate}%)",
+  "@interestWithRate": {
+    "placeholders": {
+      "rate": { "type": "String" }
+    }
+  },
+  "remainingAmount": "Remaining: {amount}",
+  "@remainingAmount": {
+    "placeholders": {
+      "amount": { "type": "String" }
+    }
+  },
+  "pendingJoinRequests": "{count} Pending Join Request",
+  "@pendingJoinRequests": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+
+  "roundNumber": "Round {number}",
+  "@roundNumber": {
+    "placeholders": {
+      "number": { "type": "int" }
+    }
+  },
+
+  "loanRules": "Loan Rules",
+  "loanRulesSubtitle": "These rules govern how members can borrow from this group.",
+  "defaultInterestRate": "Default Interest (%)",
+  "maxRepaymentMonths": "Max Repayment (months)",
+  "loanPenaltyRate": "Late Penalty (%)",
+  "penaltyGraceDays": "Grace Period (days)",
+  "maxLoanMultiplier": "Max Loan (× savings)",
+  "minContributions": "Min Contributions",
+  "yourSavingsInGroup": "Your savings in this group",
+  "yourBorrowingLimit": "Your borrowing limit",
+  "interestRateSetByGroup": "Interest rate is fixed by the group admin.",
+  "overdue": "OVERDUE",
+  "selectMember": "Select Member",
+  "contributionRecorded": "Contribution recorded successfully!",
+  "loanInsufficientBalance": "Group balance is insufficient for this loan.",
+  "loanEligibilityContributions": "You need at least {min} contribution(s) to be eligible.",
+  "@loanEligibilityContributions": {
+    "placeholders": {
+      "min": { "type": "int" }
+    }
+  },
+  "loanEligibilityLimit": "Amount exceeds your borrowing limit of {limit}.",
+  "@loanEligibilityLimit": {
+    "placeholders": {
+      "limit": { "type": "String" }
+    }
+  },
+
+  "darkMode": "Dark Mode",
+  "sendAnnouncement": "Send Announcement",
+  "announcements": "Announcements",
+  "announcementTitle": "Announcement Title",
+  "announcementMessage": "Message",
+  "announcementHint": "Write a message to all group members...",
+  "reactionsTitle": "Reactions",
+  "noAnnouncements": "No announcements yet",
+  "noAnnouncementsSubtitle": "As admin, you can send announcements to all members.",
+  "sendAnnouncementSuccess": "Announcement sent to all members!",
+  "viewReactions": "View Reactions",
+  "noReactionsYet": "No reactions yet",
+  "titleRequired": "Title is required",
+  "messageRequired": "Message is required",
+  "reactionCount": "{count} reaction(s)",
+  "@reactionCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "broadcastFrom": "From {name}",
+  "@broadcastFrom": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+
+  "submitContribution": "Submit Contribution",
+  "contributionRequestSent": "Contribution request sent! Waiting for admin approval.",
+  "contributionRequestInfo": "Your contribution will be added to the group balance once the admin approves it.",
+  "pendingApprovals": "Pending Approvals",
+  "approved": "Approved",
+  "myTotalContributions": "My Contributions",
+
+  "submitRepayment": "Submit Repayment",
+  "repaymentRequestSent": "Repayment submitted! Waiting for admin approval.",
+  "repaymentPending": "You have a repayment pending admin approval.",
+  "pendingRepayments": "Pending Repayments",
+  "amountRWF": "Amount (RWF)"
+}

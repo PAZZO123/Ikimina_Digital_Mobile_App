@@ -1,0 +1,88 @@
+{
+  "@@locale": "rw",
+  "appName": "Ikimina Digital",
+
+  "welcome": "Murakaza neza",
+  "signIn": "Injira",
+  "signOut": "Sohoka",
+  "createAccount": "Fungura Konti",
+  "forgotPassword": "Wibagiwe ijambo banga?",
+  "email": "Imeyili",
+  "password": "Ijambo banga",
+  "confirmPassword": "Emeza ijambo banga",
+  "fullName": "Amazina yose",
+  "phone": "Nomero ya telefoni",
+
+  "dashboard": "Imbonerahamwe",
+  "groups": "Amatsinda",
+  "loans": "Inguzanyo",
+  "profile": "Umwirondoro",
+  "notifications": "Imenyesha",
+  "reports": "Raporo",
+
+  "myGroups": "Amatsinda yanjye",
+  "createGroup": "Shiraho itsinda",
+  "joinGroup": "Injira mu itsinda",
+  "groupName": "Izina ry'itsinda",
+  "groupDescription": "Ibisobanuro",
+  "contributionAmount": "Ingano y'umusanzu",
+  "contributionFrequency": "Igihe cy'umusanzu",
+  "startDate": "Itariki yo gutangira",
+  "inviteCode": "Kode yo gutumanahana",
+  "members": "Abanyamuryango",
+
+  "weekly": "Buri cyumweru",
+  "biweekly": "Buri cyumweru bibiri",
+  "monthly": "Buri kwezi",
+
+  "totalBalance": "Igiteranyo cy'amafaranga",
+  "totalContributed": "Yatanzwe yose",
+  "totalLoaned": "Inguzanyo zose",
+
+  "recordContribution": "Andika umusanzu",
+  "amount": "Ingano",
+
+  "requestLoan": "Saba inguzanyo",
+  "loanAmount": "Ingano y'inguzanyo",
+  "purpose": "Impamvu",
+  "interestRate": "Inyungu",
+  "duration": "Igihe",
+  "approve": "Emera",
+  "reject": "Kanga",
+
+  "generateReport": "Tanga raporo",
+  "shareReport": "Sangira raporo",
+
+  "active": "Ikora",
+  "pending": "Itegereje",
+  "completed": "Yarangiye",
+  "approved": "Yemejwe",
+  "rejected": "Yanzwe",
+
+  "noGroups": "Nta matsinda nawe",
+  "noLoans": "Nta nguzanyo",
+  "noNotifications": "Nta menyesha",
+  "noContributions": "Nta misanzu",
+
+  "cancel": "Hagarika",
+  "save": "Bika",
+  "delete": "Siba",
+  "confirm": "Emeza",
+  "back": "Subira inyuma",
+
+  "errorRequired": "Iki gice kirashyirwaho",
+  "errorInvalidEmail": "Injiza imeyili nyayo",
+  "errorPasswordShort": "Byibura inyuguti 8",
+  "errorPasswordMismatch": "Amagambo banga ntahuye",
+
+  "currency": "RWF",
+  "payoutCycle": "Inzira yo kwishyura",
+  "nextContribution": "Umusanzu ukurikira",
+  "payoutPosition": "Urutonde rwo kwishyurwa",
+  "roundNumber": "Inzira {number}",
+  "@roundNumber": {
+    "placeholders": {
+      "number": { "type": "int" }
+    }
+  }
+}
