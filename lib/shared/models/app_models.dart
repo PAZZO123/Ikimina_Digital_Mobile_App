@@ -73,12 +73,15 @@ class GroupModel with _$GroupModel {
     DateTime? createdAt,
     // ── Loan & penalty rules ─────────────────────────────────────────────
     // All use @Default so existing Firestore docs load without errors.
-    @Default(5.0) double defaultInterestRate,    // % applied to every loan
-    @Default(12)  int    maxRepaymentMonths,      // longest allowed duration
-    @Default(2.0) double loanPenaltyRate,         // % added per late period
-    @Default(7)   int    loanPenaltyGraceDays,    // days before penalty kicks in
-    @Default(3.0) double maxLoanMultiplier,       // savings × this = borrow limit
-    @Default(1)   int    minContributionsForLoan, // min deposits before eligible
+    @Default(5.0)   double defaultInterestRate,    // % applied to every loan
+    @Default(12)    int    maxRepaymentMonths,      // longest allowed duration
+    @Default(2.0)   double loanPenaltyRate,         // % added per late period
+    @Default(7)     int    loanPenaltyGraceDays,    // days before penalty kicks in
+    @Default(3.0)   double maxLoanMultiplier,       // savings × this = borrow limit
+    @Default(1)     int    minContributionsForLoan, // min deposits before eligible
+    // ── Late-contribution fine rules ────────────────────────────────────────
+    @Default(500.0) double lateFineAmount,          // RWF charged per missed period
+    @Default(3)     int    fineGraceDays,           // grace days after due date
   }) = _GroupModel;
 
   factory GroupModel.fromJson(Map<String, dynamic> json) =>

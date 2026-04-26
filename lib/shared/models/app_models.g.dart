@@ -90,6 +90,8 @@ _$GroupModelImpl _$$GroupModelImplFromJson(Map<String, dynamic> json) =>
       maxLoanMultiplier: (json['maxLoanMultiplier'] as num?)?.toDouble() ?? 3.0,
       minContributionsForLoan:
           (json['minContributionsForLoan'] as num?)?.toInt() ?? 1,
+      lateFineAmount: (json['lateFineAmount'] as num?)?.toDouble() ?? 500.0,
+      fineGraceDays: (json['fineGraceDays'] as num?)?.toInt() ?? 3,
     );
 
 Map<String, dynamic> _$$GroupModelImplToJson(_$GroupModelImpl instance) =>
@@ -118,6 +120,8 @@ Map<String, dynamic> _$$GroupModelImplToJson(_$GroupModelImpl instance) =>
       'loanPenaltyGraceDays': instance.loanPenaltyGraceDays,
       'maxLoanMultiplier': instance.maxLoanMultiplier,
       'minContributionsForLoan': instance.minContributionsForLoan,
+      'lateFineAmount': instance.lateFineAmount,
+      'fineGraceDays': instance.fineGraceDays,
     };
 
 _$ContributionModelImpl _$$ContributionModelImplFromJson(

@@ -111,6 +111,37 @@ final groupBroadcastsProvider =
       ref.read(groupServiceProvider).streamGroupBroadcasts(groupId));
 });
 
+/// Streams all fines for a group, newest first.
+final groupFinesProvider =
+    StreamProvider.family<List<FineModel>, String>((ref, groupId) {
+  return _safeList(
+      ref.read(groupServiceProvider).streamGroupFines(groupId));
+});
+
+// ─── Account-switch utility ───────────────────────────────────────────────────
+
+/// Invalidates every user-specific Riverpod provider so the next account
+/// always starts with a completely clean data slate.
+///
+/// Call this on BOTH login (to evict the previous user's cached data) and
+/// logout (to stop stale Firestore listeners from streaming in the background).
+/// Does NOT touch [currentUserProvider] — the asyncExpand() inside it handles
+/// auth-state transitions automatically; forcing a re-subscribe only adds an
+/// unnecessary loading flash.
+void invalidateAllUserDataProviders(WidgetRef ref) {
+  ref.invalidate(userGroupsProvider);
+  ref.invalidate(groupLoansProvider);
+  ref.invalidate(groupContributionsProvider);
+  ref.invalidate(loanProvider);
+  ref.invalidate(groupStreamProvider);
+  ref.invalidate(groupJoinRequestsProvider);
+  ref.invalidate(groupMembersProvider);
+  ref.invalidate(memberSavingsProvider);
+  ref.invalidate(memberContributionCountProvider);
+  ref.invalidate(groupBroadcastsProvider);
+  ref.invalidate(groupFinesProvider);
+}
+
 class GroupService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
   final AuthService _auth;
@@ -1166,6 +1197,129 @@ class GroupService {
     await ref.update({'reactions': reactions});
   }
 
+  // ─── Mark Fine Paid ───
+  Future<void> markFinePaid(String fineId) async {
+    await _db.collection(AppConstants.finesCollection).doc(fineId).update({
+      'status': 'paid',
+      'paidAt': Timestamp.now(),
+    });
+  }
+
+  // ─── Issue Fine Manually (admin action) ───────────────────────────────────
+  // Issues a fine to a specific member and broadcasts an announcement to the
+  // entire group so everyone is aware.
+  Future<void> issueFineManually({
+    required String groupId,
+    required String groupName,
+    required String memberId,
+    required String memberName,
+    required double amount,
+    required String reason,
+    required String adminId,
+    required String adminName,
+    required List<String> memberIds,
+  }) async {
+    // 1. Write the fine document
+    await issueFine(
+      groupId: groupId,
+      memberId: memberId,
+      memberName: memberName,
+      amount: amount,
+      reason: reason,
+    );
+
+    // 2. Announce to the whole group
+    await sendBroadcast(
+      groupId: groupId,
+      groupName: groupName,
+      title: '⚠️ Fine Issued',
+      message: '$memberName has been issued a fine of '
+          'RWF ${amount.toStringAsFixed(0)}.\nReason: $reason',
+      senderId: adminId,
+      senderName: adminName,
+      memberIds: memberIds,
+    );
+  }
+
+  // ─── Auto Late-Contribution Fine ───
+  /// Checks if any member missed the contribution due date and issues fines.
+  /// Uses a deterministic Firestore doc ID (`{groupId}_{memberId}_{dueDateMs}`)
+  /// so even if multiple clients call this at once, each fine is written once.
+  Future<void> checkAndIssueLateContributionFines(String groupId) async {
+    final group = await getGroup(groupId);
+    if (group == null) return;
+    if (group.nextContributionDate == null) return;
+
+    final now = DateTime.now();
+    final dueDate = group.nextContributionDate!;
+
+    // Only proceed once we are past due date + grace period
+    final graceExpiry = dueDate.add(Duration(days: group.fineGraceDays));
+    if (now.isBefore(graceExpiry)) return;
+
+    // Period that just closed: [periodStart, dueDate]
+    final periodStart = _computePreviousDate(dueDate, group.contributionFrequency);
+
+    // Fetch all approved contributions in this period (filter in Dart to
+    // avoid needing a composite Firestore index).
+    final contribSnap = await _db
+        .collection(AppConstants.contributionsCollection)
+        .where('groupId', isEqualTo: groupId)
+        .where('status', isEqualTo: AppConstants.statusCompleted)
+        .get();
+
+    final contributedMemberIds = contribSnap.docs
+        .map((d) => d.data() as Map<String, dynamic>)
+        .where((data) {
+          final dateStr = data['contributionDate'];
+          if (dateStr == null) return false;
+          final date = dateStr is String
+              ? DateTime.tryParse(dateStr)
+              : (dateStr is Timestamp ? dateStr.toDate() : null);
+          if (date == null) return false;
+          return !date.isBefore(periodStart) && !date.isAfter(dueDate);
+        })
+        .map((data) => data['memberId'] as String)
+        .toSet();
+
+    final futures = <Future>[];
+    for (final memberId in group.memberIds) {
+      if (contributedMemberIds.contains(memberId)) continue;
+
+      // Deterministic ID prevents duplicate fines for the same period
+      final fineDocId =
+          '${groupId}_${memberId}_${dueDate.millisecondsSinceEpoch}';
+      final fineRef = _db.collection(AppConstants.finesCollection).doc(fineDocId);
+
+      futures.add(_db.runTransaction((tx) async {
+        final snap = await tx.get(fineRef);
+        if (snap.exists) return; // fine already issued
+
+        final memberDoc = await _db
+            .collection(AppConstants.usersCollection)
+            .doc(memberId)
+            .get();
+        final memberName =
+            (memberDoc.data() as Map<String, dynamic>?)?['fullName'] as String? ??
+                'Member';
+
+        final fine = FineModel(
+          id: fineDocId,
+          groupId: groupId,
+          memberId: memberId,
+          memberName: memberName,
+          amount: group.lateFineAmount,
+          reason:
+              'Late contribution (due ${dueDate.toLocal().toString().split(" ").first})',
+          issuedAt: DateTime.now(),
+          status: 'unpaid',
+        );
+        tx.set(fineRef, fine.toJson());
+      }));
+    }
+    await Future.wait(futures);
+  }
+
   // ─── Helpers ───
   String _generateInviteCode() {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -1182,6 +1336,19 @@ class GroupService {
       case AppConstants.freqMonthly:
       default:
         return DateTime(from.year, from.month + 1, from.day);
+    }
+  }
+
+  /// The start of the period that ends on [dueDate].
+  DateTime _computePreviousDate(DateTime dueDate, String frequency) {
+    switch (frequency) {
+      case AppConstants.freqWeekly:
+        return dueDate.subtract(const Duration(days: 7));
+      case AppConstants.freqBiweekly:
+        return dueDate.subtract(const Duration(days: 14));
+      case AppConstants.freqMonthly:
+      default:
+        return DateTime(dueDate.year, dueDate.month - 1, dueDate.day);
     }
   }
 }

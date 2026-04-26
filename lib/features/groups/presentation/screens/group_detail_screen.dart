@@ -199,12 +199,12 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen>
                   labelColor: Colors.white,
                   unselectedLabelColor: Colors.white60,
                   indicatorWeight: 3,
-                  tabs: [
-                    Tab(text: l10n.tabOverview),
-                    Tab(text: l10n.tabContribute),
-                    Tab(text: l10n.loans),
-                    Tab(text: l10n.tabPayouts),
-                    Tab(text: l10n.announcements),
+                  tabs: const [
+                    Tab(icon: Icon(Icons.home_outlined, size: 22)),
+                    Tab(icon: Icon(Icons.savings_outlined, size: 22)),
+                    Tab(icon: Icon(Icons.credit_card_outlined, size: 22)),
+                    Tab(icon: Icon(Icons.send_rounded, size: 22)),
+                    Tab(icon: Icon(Icons.campaign_outlined, size: 22)),
                   ],
                 ),
               ),
@@ -275,6 +275,12 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen>
           }
         }
         break;
+      case 'fine':
+        final currentUser = ref.read(currentUserProvider).valueOrNull;
+        if (currentUser != null && context.mounted) {
+          _showIssueFineSheet(context, group, currentUser);
+        }
+        break;
       case 'invite':
         if (group.inviteCode != null && context.mounted) {
           _showInviteDialog(context, group);
@@ -286,6 +292,289 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen>
         }
         break;
     }
+  }
+
+  // ─── Issue Fine bottom sheet ──────────────────────────────────────────────
+  Future<void> _showIssueFineSheet(
+      BuildContext context, GroupModel group, UserModel admin) async {
+    // Load member list first (usually already cached by the tab)
+    final members =
+        await ref.read(groupMembersProvider(group.id).future).catchError((_) => <UserModel>[]);
+
+    if (!mounted || members.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not load members. Try again.')),
+        );
+      }
+      return;
+    }
+
+    UserModel? selectedMember;
+    final amountCtrl = TextEditingController(
+        text: group.lateFineAmount.toStringAsFixed(0));
+    final reasonCtrl = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: context.cardSurface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) {
+        return StatefulBuilder(builder: (ctx, setSheet) {
+          bool saving = false;
+
+          return Padding(
+            padding: EdgeInsets.only(
+              left: 24,
+              right: 24,
+              top: 24,
+              bottom: MediaQuery.of(ctx).viewInsets.bottom + 32,
+            ),
+            child: Form(
+              key: formKey,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Handle bar
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: context.borderColor,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Title
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: AppColors.error.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Icon(Icons.gavel_rounded,
+                              color: AppColors.error, size: 22),
+                        ),
+                        const SizedBox(width: 12),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Issue Fine',
+                                style: Theme.of(ctx)
+                                    .textTheme
+                                    .titleLarge
+                                    ?.copyWith(fontWeight: FontWeight.bold)),
+                            Text('Select member, amount & reason',
+                                style: Theme.of(ctx)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.copyWith(color: ctx.textHintColor)),
+                          ],
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Member selector
+                    Text('Member',
+                        style: Theme.of(ctx).textTheme.labelMedium),
+                    const SizedBox(height: 8),
+                    Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(color: ctx.borderColor),
+                        borderRadius: BorderRadius.circular(12),
+                        color: ctx.bg,
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<UserModel>(
+                          isExpanded: true,
+                          value: selectedMember,
+                          hint: const Text('Choose a member'),
+                          items: members.map((m) {
+                            return DropdownMenuItem<UserModel>(
+                              value: m,
+                              child: Row(
+                                children: [
+                                  MemberAvatar(name: m.fullName, size: 32),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: Text(m.fullName,
+                                        style: Theme.of(ctx)
+                                            .textTheme
+                                            .titleSmall,
+                                        overflow: TextOverflow.ellipsis),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }).toList(),
+                          onChanged: (m) => setSheet(() => selectedMember = m),
+                        ),
+                      ),
+                    ),
+                    if (selectedMember == null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 6, left: 4),
+                        child: Text('Please select a member',
+                            style: TextStyle(
+                                color: AppColors.error, fontSize: 12)),
+                      ),
+                    const SizedBox(height: 16),
+
+                    // Amount field
+                    Text('Fine Amount (RWF)',
+                        style: Theme.of(ctx).textTheme.labelMedium),
+                    const SizedBox(height: 8),
+                    TextFormField(
+                      controller: amountCtrl,
+                      keyboardType: TextInputType.number,
+                      textInputAction: TextInputAction.next,
+                      decoration: InputDecoration(
+                        hintText: '500',
+                        prefixIcon: const Icon(Icons.payments_outlined),
+                        filled: true,
+                        fillColor: ctx.bg,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: ctx.borderColor),
+                        ),
+                      ),
+                      validator: (v) {
+                        if (v == null || v.trim().isEmpty) {
+                          return 'Enter an amount';
+                        }
+                        final n = double.tryParse(v.trim());
+                        if (n == null || n <= 0) {
+                          return 'Enter a valid amount';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Reason field
+                    Text('Reason',
+                        style: Theme.of(ctx).textTheme.labelMedium),
+                    const SizedBox(height: 8),
+                    TextFormField(
+                      controller: reasonCtrl,
+                      maxLines: 3,
+                      textInputAction: TextInputAction.done,
+                      decoration: InputDecoration(
+                        hintText: 'e.g. Late contribution for March 2025',
+                        filled: true,
+                        fillColor: ctx.bg,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: ctx.borderColor),
+                        ),
+                      ),
+                      validator: (v) => (v == null || v.trim().isEmpty)
+                          ? 'Please provide a reason'
+                          : null,
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Buttons
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () => Navigator.pop(ctx),
+                            child: const Text('Cancel'),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.error,
+                              foregroundColor: Colors.white,
+                              padding:
+                                  const EdgeInsets.symmetric(vertical: 14),
+                            ),
+                            icon: saving
+                                ? const SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white))
+                                : const Icon(Icons.gavel_rounded, size: 18),
+                            label: const Text('Issue Fine'),
+                            onPressed: saving
+                                ? null
+                                : () async {
+                                    if (selectedMember == null) {
+                                      setSheet(() {});
+                                      return;
+                                    }
+                                    if (!formKey.currentState!.validate()) {
+                                      return;
+                                    }
+                                    setSheet(() => saving = true);
+                                    try {
+                                      await ref
+                                          .read(groupServiceProvider)
+                                          .issueFineManually(
+                                            groupId: group.id,
+                                            groupName: group.name,
+                                            memberId: selectedMember!.id,
+                                            memberName:
+                                                selectedMember!.fullName,
+                                            amount: double.parse(
+                                                amountCtrl.text.trim()),
+                                            reason: reasonCtrl.text.trim(),
+                                            adminId: admin.id,
+                                            adminName: admin.fullName,
+                                            memberIds: group.memberIds,
+                                          );
+                                      if (ctx.mounted) {
+                                        Navigator.pop(ctx);
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(const SnackBar(
+                                          content: Text(
+                                              '✅ Fine issued and announced to the group'),
+                                          backgroundColor: AppColors.success,
+                                        ));
+                                      }
+                                    } catch (e) {
+                                      if (ctx.mounted) {
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(SnackBar(
+                                                content: Text(e.toString())));
+                                      }
+                                    } finally {
+                                      if (ctx.mounted) {
+                                        setSheet(() => saving = false);
+                                      }
+                                    }
+                                  },
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                  ],
+                ),
+              ),
+            ),
+          );
+        });
+      },
+    );
   }
 
   void _showInviteDialog(BuildContext context, GroupModel group) {
@@ -448,7 +737,7 @@ class _OverviewTab extends ConsumerWidget {
           ),
           const SizedBox(height: 24),
 
-          // Payout progress
+          // ── Group savings info ────────────────────────────────────────────
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
@@ -459,18 +748,23 @@ class _OverviewTab extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(l10n.payoutCycle,
-                    style: Theme.of(context).textTheme.titleMedium),
-                const SizedBox(height: 16),
-                LabeledProgress(
-                  label: l10n.progress,
-                  progress: group.currentPayoutIndex /
-                      (group.memberIds.isEmpty ? 1 : group.memberIds.length),
-                  leftLabel: 'Round ${group.currentPayoutIndex + 1}',
-                  rightLabel:
-                      '${group.memberIds.length - group.currentPayoutIndex} remaining',
+                Row(
+                  children: [
+                    const Icon(Icons.info_outline_rounded,
+                        color: AppColors.primary, size: 18),
+                    const SizedBox(width: 8),
+                    Text('Group Details',
+                        style: Theme.of(context).textTheme.titleMedium),
+                  ],
                 ),
                 const SizedBox(height: 16),
+                if (group.startDate != null)
+                  _InfoRow(
+                    icon: Icons.event_rounded,
+                    label: 'Started',
+                    value: DateFormat('EEE, d MMM yyyy')
+                        .format(group.startDate!),
+                  ),
                 if (group.nextContributionDate != null)
                   _InfoRow(
                     icon: Icons.calendar_today_outlined,
@@ -487,6 +781,11 @@ class _OverviewTab extends ConsumerWidget {
                   icon: Icons.payments_outlined,
                   label: l10n.perContribution,
                   value: formatRWF(group.contributionAmount),
+                ),
+                _InfoRow(
+                  icon: Icons.people_rounded,
+                  label: 'Total Members',
+                  value: '${group.memberIds.length}',
                 ),
                 if (group.inviteCode != null)
                   _InfoRow(
@@ -581,21 +880,47 @@ final _pendingContribRequestsProvider =
   return ref.read(groupServiceProvider).streamContributionRequests(groupId);
 });
 
-class _ContributionsTab extends ConsumerWidget {
+class _ContributionsTab extends ConsumerStatefulWidget {
   final GroupModel group;
   final bool isAdmin;
 
   const _ContributionsTab({required this.group, required this.isAdmin});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_ContributionsTab> createState() => _ContributionsTabState();
+}
+
+class _ContributionsTabState extends ConsumerState<_ContributionsTab> {
+  @override
+  void initState() {
+    super.initState();
+    // Admins only: check for late fines after a short delay so the UI
+    // renders first. Wrapped in a timeout so a slow/offline network
+    // never causes an ANR.
+    if (widget.isAdmin) {
+      Future.delayed(const Duration(seconds: 2), () {
+        if (!mounted) return;
+        ref
+            .read(groupServiceProvider)
+            .checkAndIssueLateContributionFines(widget.group.id)
+            .timeout(const Duration(seconds: 10))
+            .catchError((_) {}); // non-fatal — never block the UI
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final group = widget.group;
+    final isAdmin = widget.isAdmin;
     final contribAsync = ref.watch(groupContributionsProvider(group.id));
-    final pendingAsync =
-        ref.watch(_pendingContribRequestsProvider(group.id));
+    final pendingAsync = ref.watch(_pendingContribRequestsProvider(group.id));
+    final finesAsync = ref.watch(groupFinesProvider(group.id));
     final currentUser = ref.watch(currentUserProvider).valueOrNull;
 
     final pendingRequests = pendingAsync.valueOrNull ?? [];
+    final fines = finesAsync.valueOrNull ?? [];
 
     return Scaffold(
       floatingActionButton: FloatingActionButton.extended(
@@ -608,6 +933,32 @@ class _ContributionsTab extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          // ── Outstanding fines section ──
+          if (fines.isNotEmpty) ...[
+            _SectionHeader(
+              title: 'Outstanding Fines',
+              trailing: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: AppColors.error.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  '${fines.where((f) => f.status == 'unpaid').length}',
+                  style: const TextStyle(
+                      color: AppColors.error,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 12),
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            ...fines
+                .where((f) => f.status == 'unpaid')
+                .map((f) => _FineTile(fine: f, isAdmin: isAdmin)),
+            const SizedBox(height: 16),
+          ],
+
           // ── Pending requests section (admin sees all; member sees own) ──
           if (pendingRequests.isNotEmpty || isAdmin) ...[
             if (pendingRequests.isNotEmpty) ...[
@@ -645,7 +996,7 @@ class _ContributionsTab extends ConsumerWidget {
             loading: () => const LoadingWidget(),
             error: (e, _) => Center(child: Text(e.toString())),
             data: (contribs) {
-              if (contribs.isEmpty && pendingRequests.isEmpty) {
+              if (contribs.isEmpty && pendingRequests.isEmpty && fines.isEmpty) {
                 return EmptyState(
                   icon: Icons.payments_outlined,
                   title: l10n.noContributions,
@@ -664,6 +1015,125 @@ class _ContributionsTab extends ConsumerWidget {
             },
           ),
           const SizedBox(height: 100),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Fine tile ──
+class _FineTile extends ConsumerStatefulWidget {
+  final FineModel fine;
+  final bool isAdmin;
+  const _FineTile({required this.fine, required this.isAdmin});
+
+  @override
+  ConsumerState<_FineTile> createState() => _FineTileState();
+}
+
+class _FineTileState extends ConsumerState<_FineTile> {
+  bool _loading = false;
+
+  Future<void> _markPaid() async {
+    setState(() => _loading = true);
+    try {
+      await ref.read(groupServiceProvider).markFinePaid(widget.fine.id);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('✅ Fine marked as paid'),
+            backgroundColor: AppColors.success,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(e.toString())));
+      }
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final fine = widget.fine;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.error.withOpacity(0.06),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.error.withOpacity(0.3)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: AppColors.error.withOpacity(0.12),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Icon(Icons.gavel_rounded,
+                color: AppColors.error, size: 20),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(fine.memberName,
+                    style: Theme.of(context).textTheme.titleSmall),
+                const SizedBox(height: 2),
+                Text(fine.reason,
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodySmall
+                        ?.copyWith(color: context.textHintColor),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                formatRWF(fine.amount),
+                style: const TextStyle(
+                    color: AppColors.error,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14),
+              ),
+              if (widget.isAdmin) ...[
+                const SizedBox(height: 6),
+                _loading
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2))
+                    : GestureDetector(
+                        onTap: _markPaid,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: AppColors.success.withOpacity(0.12),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Text('Mark paid',
+                              style: TextStyle(
+                                  color: AppColors.success,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600)),
+                        ),
+                      ),
+              ],
+            ],
+          ),
         ],
       ),
     );
@@ -1430,7 +1900,10 @@ class _LoanStat extends StatelessWidget {
   }
 }
 
-// ─── Payouts Tab ───
+// ─── Payouts Tab → Member Savings Breakdown ──────────────────────────────────
+// The group no longer pays out in rotation.  Instead, each member saves and
+// can borrow; at maturity everyone receives their contributed share + profit.
+// This tab shows each member's individual savings summary.
 class _PayoutsTab extends ConsumerWidget {
   final GroupModel group;
   const _PayoutsTab({required this.group});
@@ -1438,99 +1911,295 @@ class _PayoutsTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final membersAsync = ref.watch(groupMembersProvider(group.id));
+    final contribsAsync = ref.watch(groupContributionsProvider(group.id));
 
-    return membersAsync.when(
-      loading: () => const LoadingWidget(),
-      error: (_, __) => _buildList(context, {}),
-      data: (members) {
-        final nameMap = {for (final m in members) m.id: m.fullName};
-        return _buildList(context, nameMap);
-      },
-    );
-  }
+    // Build a name map and compute per-member totals from approved contributions
+    final nameMap = {
+      for (final m in (membersAsync.valueOrNull ?? [])) m.id: m.fullName,
+    };
 
-  Widget _buildList(BuildContext context, Map<String, String> nameMap) {
-    final l10n = AppLocalizations.of(context)!;
+    final memberTotals = <String, double>{};
+    for (final c in (contribsAsync.valueOrNull ?? [])) {
+      if (c.status == 'completed') {
+        memberTotals[c.memberId] =
+            (memberTotals[c.memberId] ?? 0) + c.amount;
+      }
+    }
+
+    final totalContributed = group.totalContributed;
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(l10n.payoutRotation, style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: 16),
-          ...group.payoutOrder.asMap().entries.map((e) {
-            final idx = e.key;
-            final memberId = e.value;
-            final isDone = idx < group.currentPayoutIndex;
-            final isCurrent = idx == group.currentPayoutIndex;
-            final name = nameMap[memberId] ?? 'Member ${idx + 1}';
+          // ── Header ──────────────────────────────────────────────────────
+          Row(
+            children: [
+              const Icon(Icons.savings_rounded,
+                  color: AppColors.primary, size: 22),
+              const SizedBox(width: 10),
+              Text('Member Savings',
+                  style: Theme.of(context).textTheme.titleLarge),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Members save and can borrow. At maturity each member '
+            'receives their contributed share plus profit from loans.',
+            style: Theme.of(context)
+                .textTheme
+                .bodySmall
+                ?.copyWith(color: context.textHintColor),
+          ),
+          const SizedBox(height: 20),
 
-            return Container(
-              margin: const EdgeInsets.only(bottom: 12),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: isCurrent ? context.primarySurf : context.cardSurface,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(
-                  color: isCurrent ? AppColors.primary : context.borderColor,
-                  width: isCurrent ? 2 : 1,
-                ),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: isDone
-                          ? AppColors.success
-                          : isCurrent
-                              ? AppColors.primary
-                              : context.surfaceVar,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      isDone ? Icons.check_rounded : Icons.circle,
-                      color: isDone || isCurrent ? Colors.white : context.textHintColor,
-                      size: 18,
-                    ),
+          // ── Group balance summary card ───────────────────────────────────
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: AppColors.primaryGradient,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: _SavingsStat(
+                    label: 'Total Saved',
+                    value: formatRWF(group.totalContributed),
+                    light: true,
                   ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                ),
+                Container(
+                    width: 1,
+                    height: 40,
+                    color: Colors.white.withOpacity(0.3)),
+                Expanded(
+                  child: _SavingsStat(
+                    label: 'Available Balance',
+                    value: formatRWF(group.totalBalance),
+                    light: true,
+                  ),
+                ),
+                Container(
+                    width: 1,
+                    height: 40,
+                    color: Colors.white.withOpacity(0.3)),
+                Expanded(
+                  child: _SavingsStat(
+                    label: 'Loaned Out',
+                    value: formatRWF(group.totalLoaned),
+                    light: true,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          // ── Per-member savings ───────────────────────────────────────────
+          Text('Individual Breakdown',
+              style: Theme.of(context).textTheme.titleSmall),
+          const SizedBox(height: 12),
+
+          if (group.memberIds.isEmpty)
+            const EmptyState(
+              icon: Icons.people_outline_rounded,
+              title: 'No members yet',
+              subtitle: 'Members will appear here once they join.',
+            )
+          else
+            ...group.memberIds.map((memberId) {
+              final name = nameMap[memberId] ?? 'Member';
+              final contributed = memberTotals[memberId] ?? 0.0;
+              // Each member's share of the current balance, proportional to
+              // their contributions vs the group total.
+              final shareRatio = totalContributed > 0
+                  ? contributed / totalContributed
+                  : (group.memberIds.isEmpty
+                      ? 0.0
+                      : 1.0 / group.memberIds.length);
+              final estimatedShare = group.totalBalance * shareRatio;
+
+              return _MemberSavingsTile(
+                memberId: memberId,
+                name: name,
+                contributed: contributed,
+                shareRatio: shareRatio,
+                estimatedShare: estimatedShare,
+                isAdmin: group.adminId == memberId,
+              );
+            }),
+
+          const SizedBox(height: 20),
+
+          // ── Info note ────────────────────────────────────────────────────
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: context.primarySurf,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(Icons.info_outline_rounded,
+                    color: AppColors.primary, size: 18),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'Estimated share is proportional to each member\'s '
+                    'contributions relative to the group total. Actual payouts '
+                    'include profit earned from loan interest.',
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodySmall
+                        ?.copyWith(color: AppColors.primaryDark),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+        ],
+      ),
+    );
+  }
+}
+
+// Small stat column used inside the gradient summary card
+class _SavingsStat extends StatelessWidget {
+  final String label;
+  final String value;
+  final bool light;
+  const _SavingsStat(
+      {required this.label, required this.value, this.light = false});
+
+  @override
+  Widget build(BuildContext context) {
+    final textColor = light ? Colors.white : context.textPrim;
+    final labelColor = light ? Colors.white70 : context.textHintColor;
+    return Column(
+      children: [
+        Text(value,
+            style: TextStyle(
+                color: textColor,
+                fontWeight: FontWeight.w700,
+                fontSize: 14),
+            textAlign: TextAlign.center),
+        const SizedBox(height: 4),
+        Text(label,
+            style: TextStyle(color: labelColor, fontSize: 11),
+            textAlign: TextAlign.center),
+      ],
+    );
+  }
+}
+
+// Per-member savings card
+class _MemberSavingsTile extends StatelessWidget {
+  final String memberId;
+  final String name;
+  final double contributed;
+  final double shareRatio;
+  final double estimatedShare;
+  final bool isAdmin;
+
+  const _MemberSavingsTile({
+    required this.memberId,
+    required this.name,
+    required this.contributed,
+    required this.shareRatio,
+    required this.estimatedShare,
+    required this.isAdmin,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final pct = (shareRatio * 100).clamp(0.0, 100.0);
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: context.cardSurface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: context.borderColor),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Name row
+          Row(
+            children: [
+              MemberAvatar(name: name, size: 38),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
                       children: [
-                        Text('Round ${idx + 1}',
-                            style: Theme.of(context).textTheme.labelSmall),
-                        Text(name,
-                            style: Theme.of(context).textTheme.titleSmall),
+                        Expanded(
+                          child: Text(name,
+                              style: Theme.of(context).textTheme.titleSmall,
+                              overflow: TextOverflow.ellipsis),
+                        ),
+                        if (isAdmin)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 7, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: context.primarySurf,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Text('Admin',
+                                style: TextStyle(
+                                    color: AppColors.primary,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w700)),
+                          ),
                       ],
                     ),
-                  ),
-                  if (isCurrent)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(l10n.nextLabel,
-                          style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700)),
-                    ),
-                  if (isDone)
-                    Text(l10n.paidLabel,
+                    Text('${pct.toStringAsFixed(1)}% share',
                         style: Theme.of(context)
                             .textTheme
-                            .labelSmall
-                            ?.copyWith(color: AppColors.success)),
-                ],
+                            .bodySmall
+                            ?.copyWith(color: context.textHintColor)),
+                  ],
+                ),
               ),
-            );
-          }).toList(),
+            ],
+          ),
+          const SizedBox(height: 12),
+          // Progress bar (member's share of total contributions)
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: shareRatio.clamp(0.0, 1.0),
+              backgroundColor: context.borderColor,
+              valueColor:
+                  const AlwaysStoppedAnimation<Color>(AppColors.primary),
+              minHeight: 6,
+            ),
+          ),
+          const SizedBox(height: 12),
+          // Amount row
+          Row(
+            children: [
+              Expanded(
+                child: _SavingsStat(
+                  label: 'Contributed',
+                  value: formatRWF(contributed),
+                ),
+              ),
+              Expanded(
+                child: _SavingsStat(
+                  label: 'Est. Share',
+                  value: formatRWF(estimatedShare),
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );

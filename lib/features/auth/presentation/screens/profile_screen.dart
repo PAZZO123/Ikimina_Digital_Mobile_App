@@ -7,6 +7,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/services/auth_service.dart';
+import '../../../../core/services/group_service.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -29,9 +30,16 @@ class ProfileScreen extends ConsumerWidget {
         actions: [
           TextButton(
             onPressed: () async {
-              await ref.read(authServiceProvider).logout();
-              // Clear cached user so the next login starts fresh
+              // 1. Clear all cached provider data first so the next account
+              //    starts completely clean.
+              invalidateAllUserDataProviders(ref);
               ref.invalidate(currentUserProvider);
+
+              // 2. Sign out — the router's _AuthNotifier will redirect to /login
+              //    automatically via refreshListenable.
+              await ref.read(authServiceProvider).logout();
+
+              // 3. Manual navigate as a fast path (router redirect fires async).
               if (context.mounted) context.go(AppRoutes.login);
             },
             child: Text(l10n.signOut, style: const TextStyle(color: AppColors.error)),
@@ -60,6 +68,8 @@ class _ProfileContent extends ConsumerStatefulWidget {
 
 class _ProfileContentState extends ConsumerState<_ProfileContent> {
   bool _uploadingPhoto = false;
+
+  // ─── Photo upload ─────────────────────────────────────────────────────────
 
   Future<void> _pickAndUploadPhoto() async {
     final source = await showModalBottomSheet<ImageSource>(
@@ -133,13 +143,152 @@ class _ProfileContentState extends ConsumerState<_ProfileContent> {
     }
   }
 
+  // ─── Edit name / phone ────────────────────────────────────────────────────
+
+  Future<void> _showEditSheet({
+    required String title,
+    required String currentValue,
+    required String hint,
+    required TextInputType keyboardType,
+    required String? Function(String?) validator,
+    required Future<void> Function(String newValue) onSave,
+  }) async {
+    final ctrl = TextEditingController(text: currentValue);
+    final formKey = GlobalKey<FormState>();
+    bool saving = false;
+
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: context.cardSurface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) {
+        return StatefulBuilder(builder: (ctx, setModalState) {
+          return Padding(
+            padding: EdgeInsets.only(
+              left: 24, right: 24, top: 24,
+              bottom: MediaQuery.of(ctx).viewInsets.bottom + 32,
+            ),
+            child: Form(
+              key: formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Handle bar
+                  Center(
+                    child: Container(
+                      width: 40, height: 4,
+                      decoration: BoxDecoration(
+                        color: context.borderColor,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Text(title,
+                      style: Theme.of(ctx)
+                          .textTheme
+                          .titleLarge
+                          ?.copyWith(fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 20),
+                  TextFormField(
+                    controller: ctrl,
+                    autofocus: true,
+                    keyboardType: keyboardType,
+                    textInputAction: TextInputAction.done,
+                    decoration: InputDecoration(
+                      hintText: hint,
+                      filled: true,
+                      fillColor: context.bg,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: context.borderColor),
+                      ),
+                    ),
+                    validator: validator,
+                    onFieldSubmitted: (_) async {
+                      if (!formKey.currentState!.validate()) return;
+                      setModalState(() => saving = true);
+                      await onSave(ctrl.text.trim());
+                      if (ctx.mounted) Navigator.pop(ctx);
+                    },
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => Navigator.pop(ctx),
+                          child: const Text('Cancel'),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: saving
+                              ? null
+                              : () async {
+                                  if (!formKey.currentState!.validate()) return;
+                                  setModalState(() => saving = true);
+                                  await onSave(ctrl.text.trim());
+                                  if (ctx.mounted) Navigator.pop(ctx);
+                                },
+                          child: saving
+                              ? const SizedBox(
+                                  width: 20, height: 20,
+                                  child: CircularProgressIndicator(
+                                      strokeWidth: 2, color: Colors.white),
+                                )
+                              : const Text('Save'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          );
+        });
+      },
+    );
+  }
+
+  void _editName() => _showEditSheet(
+        title: 'Edit Full Name',
+        currentValue: widget.user.fullName,
+        hint: 'Enter your full name',
+        keyboardType: TextInputType.name,
+        validator: (v) =>
+            (v == null || v.trim().isEmpty) ? 'Name cannot be empty' : null,
+        onSave: (value) => ref.read(authServiceProvider).updateProfile(
+              widget.user.copyWith(fullName: value),
+            ),
+      );
+
+  void _editPhone() => _showEditSheet(
+        title: 'Edit Phone Number',
+        currentValue: widget.user.phone,
+        hint: '07XXXXXXXX',
+        keyboardType: TextInputType.phone,
+        validator: (v) =>
+            (v == null || v.trim().isEmpty) ? 'Phone cannot be empty' : null,
+        onSave: (value) => ref.read(authServiceProvider).updateProfile(
+              widget.user.copyWith(phone: value),
+            ),
+      );
+
+  // ─── Build ────────────────────────────────────────────────────────────────
+
   @override
   Widget build(BuildContext context) {
     final user = widget.user;
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
-        // Avatar & Name
+        // ── Avatar & Name ──────────────────────────────────────────────────
         Center(
           child: Column(
             children: [
@@ -210,18 +359,47 @@ class _ProfileContentState extends ConsumerState<_ProfileContent> {
 
         const SizedBox(height: 32),
 
-        // Info Section
-        _SectionHeader(title: AppLocalizations.of(context)!.accountInfo),
+        // ── Account Info ───────────────────────────────────────────────────
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            _SectionHeader(title: AppLocalizations.of(context)!.accountInfo),
+            TextButton.icon(
+              onPressed: _editName,
+              icon: const Icon(Icons.edit_outlined, size: 14),
+              label: const Text('Edit', style: TextStyle(fontSize: 12)),
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.primary,
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              ),
+            ),
+          ],
+        ),
+
+        // Full name — tappable to edit
+        _EditableTile(
+          icon: Icons.person_outline_rounded,
+          label: AppLocalizations.of(context)!.fullName,
+          value: user.fullName,
+          onTap: _editName,
+        ),
+
+        // Phone — tappable to edit
+        _EditableTile(
+          icon: Icons.phone_outlined,
+          label: AppLocalizations.of(context)!.phone,
+          value: user.phone.isEmpty ? '—  tap to add' : user.phone,
+          valueColor: user.phone.isEmpty ? context.textHintColor : null,
+          onTap: _editPhone,
+        ),
+
+        // Email — read-only (Firebase Auth email)
         _ProfileTile(
           icon: Icons.email_outlined,
           label: AppLocalizations.of(context)!.email,
           value: user.email,
         ),
-        _ProfileTile(
-          icon: Icons.phone_outlined,
-          label: AppLocalizations.of(context)!.phone,
-          value: user.phone,
-        ),
+
         _ProfileTile(
           icon: Icons.badge_outlined,
           label: AppLocalizations.of(context)!.memberId,
@@ -230,7 +408,7 @@ class _ProfileContentState extends ConsumerState<_ProfileContent> {
 
         const SizedBox(height: 24),
 
-        // Settings Section
+        // ── Settings ───────────────────────────────────────────────────────
         _SectionHeader(title: AppLocalizations.of(context)!.settings),
         _SettingsTile(
           icon: Icons.language_rounded,
@@ -260,7 +438,6 @@ class _ProfileContentState extends ConsumerState<_ProfileContent> {
             onChanged: (isDark) async {
               final mode = isDark ? ThemeMode.dark : ThemeMode.light;
               ref.read(themeModeProvider.notifier).state = mode;
-              // Persist to Firestore
               await ref.read(authServiceProvider).updateProfile(
                     user.copyWith(
                         preferredTheme: isDark ? 'dark' : 'light'),
@@ -290,7 +467,7 @@ class _ProfileContentState extends ConsumerState<_ProfileContent> {
 
         const SizedBox(height: 24),
 
-        // Danger Zone
+        // ── Danger Zone ────────────────────────────────────────────────────
         _SectionHeader(title: AppLocalizations.of(context)!.account),
         _SettingsTile(
           icon: Icons.lock_reset_rounded,
@@ -321,6 +498,8 @@ class _ProfileContentState extends ConsumerState<_ProfileContent> {
   }
 }
 
+// ─── Widgets ──────────────────────────────────────────────────────────────────
+
 class _SectionHeader extends StatelessWidget {
   final String title;
   const _SectionHeader({required this.title});
@@ -340,6 +519,7 @@ class _SectionHeader extends StatelessWidget {
   }
 }
 
+/// Read-only info tile (email, member ID).
 class _ProfileTile extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -374,6 +554,61 @@ class _ProfileTile extends StatelessWidget {
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Editable info tile — shows a pencil icon and opens the editor on tap.
+class _EditableTile extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+  final Color? valueColor;
+  final VoidCallback onTap;
+
+  const _EditableTile({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.onTap,
+    this.valueColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: context.cardSurface,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: context.borderColor),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, size: 20, color: AppColors.primary),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(label, style: Theme.of(context).textTheme.labelSmall),
+                  const SizedBox(height: 2),
+                  Text(
+                    value,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          color: valueColor,
+                        ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.edit_outlined, size: 16, color: context.textHintColor),
+          ],
+        ),
       ),
     );
   }

@@ -500,7 +500,12 @@ mixin _$GroupModel {
       throw _privateConstructorUsedError; // days before penalty kicks in
   double get maxLoanMultiplier =>
       throw _privateConstructorUsedError; // savings × this = borrow limit
-  int get minContributionsForLoan => throw _privateConstructorUsedError;
+  int get minContributionsForLoan =>
+      throw _privateConstructorUsedError; // min deposits before eligible
+// ── Late-contribution fine rules ────────────────────────────────────────
+  double get lateFineAmount =>
+      throw _privateConstructorUsedError; // RWF charged per missed period
+  int get fineGraceDays => throw _privateConstructorUsedError;
 
   /// Serializes this GroupModel to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -542,7 +547,9 @@ abstract class $GroupModelCopyWith<$Res> {
       double loanPenaltyRate,
       int loanPenaltyGraceDays,
       double maxLoanMultiplier,
-      int minContributionsForLoan});
+      int minContributionsForLoan,
+      double lateFineAmount,
+      int fineGraceDays});
 }
 
 /// @nodoc
@@ -584,6 +591,8 @@ class _$GroupModelCopyWithImpl<$Res, $Val extends GroupModel>
     Object? loanPenaltyGraceDays = null,
     Object? maxLoanMultiplier = null,
     Object? minContributionsForLoan = null,
+    Object? lateFineAmount = null,
+    Object? fineGraceDays = null,
   }) {
     return _then(_value.copyWith(
       id: null == id
@@ -682,6 +691,14 @@ class _$GroupModelCopyWithImpl<$Res, $Val extends GroupModel>
           ? _value.minContributionsForLoan
           : minContributionsForLoan // ignore: cast_nullable_to_non_nullable
               as int,
+      lateFineAmount: null == lateFineAmount
+          ? _value.lateFineAmount
+          : lateFineAmount // ignore: cast_nullable_to_non_nullable
+              as double,
+      fineGraceDays: null == fineGraceDays
+          ? _value.fineGraceDays
+          : fineGraceDays // ignore: cast_nullable_to_non_nullable
+              as int,
     ) as $Val);
   }
 }
@@ -718,7 +735,9 @@ abstract class _$$GroupModelImplCopyWith<$Res>
       double loanPenaltyRate,
       int loanPenaltyGraceDays,
       double maxLoanMultiplier,
-      int minContributionsForLoan});
+      int minContributionsForLoan,
+      double lateFineAmount,
+      int fineGraceDays});
 }
 
 /// @nodoc
@@ -758,6 +777,8 @@ class __$$GroupModelImplCopyWithImpl<$Res>
     Object? loanPenaltyGraceDays = null,
     Object? maxLoanMultiplier = null,
     Object? minContributionsForLoan = null,
+    Object? lateFineAmount = null,
+    Object? fineGraceDays = null,
   }) {
     return _then(_$GroupModelImpl(
       id: null == id
@@ -856,6 +877,14 @@ class __$$GroupModelImplCopyWithImpl<$Res>
           ? _value.minContributionsForLoan
           : minContributionsForLoan // ignore: cast_nullable_to_non_nullable
               as int,
+      lateFineAmount: null == lateFineAmount
+          ? _value.lateFineAmount
+          : lateFineAmount // ignore: cast_nullable_to_non_nullable
+              as double,
+      fineGraceDays: null == fineGraceDays
+          ? _value.fineGraceDays
+          : fineGraceDays // ignore: cast_nullable_to_non_nullable
+              as int,
     ));
   }
 }
@@ -887,7 +916,9 @@ class _$GroupModelImpl implements _GroupModel {
       this.loanPenaltyRate = 2.0,
       this.loanPenaltyGraceDays = 7,
       this.maxLoanMultiplier = 3.0,
-      this.minContributionsForLoan = 1})
+      this.minContributionsForLoan = 1,
+      this.lateFineAmount = 500.0,
+      this.fineGraceDays = 3})
       : _memberIds = memberIds,
         _payoutOrder = payoutOrder;
 
@@ -974,10 +1005,19 @@ class _$GroupModelImpl implements _GroupModel {
   @override
   @JsonKey()
   final int minContributionsForLoan;
+// min deposits before eligible
+// ── Late-contribution fine rules ────────────────────────────────────────
+  @override
+  @JsonKey()
+  final double lateFineAmount;
+// RWF charged per missed period
+  @override
+  @JsonKey()
+  final int fineGraceDays;
 
   @override
   String toString() {
-    return 'GroupModel(id: $id, name: $name, adminId: $adminId, contributionAmount: $contributionAmount, contributionFrequency: $contributionFrequency, description: $description, memberIds: $memberIds, payoutOrder: $payoutOrder, currentPayoutIndex: $currentPayoutIndex, totalBalance: $totalBalance, totalContributed: $totalContributed, totalLoaned: $totalLoaned, status: $status, groupImageUrl: $groupImageUrl, inviteCode: $inviteCode, startDate: $startDate, nextContributionDate: $nextContributionDate, createdAt: $createdAt, defaultInterestRate: $defaultInterestRate, maxRepaymentMonths: $maxRepaymentMonths, loanPenaltyRate: $loanPenaltyRate, loanPenaltyGraceDays: $loanPenaltyGraceDays, maxLoanMultiplier: $maxLoanMultiplier, minContributionsForLoan: $minContributionsForLoan)';
+    return 'GroupModel(id: $id, name: $name, adminId: $adminId, contributionAmount: $contributionAmount, contributionFrequency: $contributionFrequency, description: $description, memberIds: $memberIds, payoutOrder: $payoutOrder, currentPayoutIndex: $currentPayoutIndex, totalBalance: $totalBalance, totalContributed: $totalContributed, totalLoaned: $totalLoaned, status: $status, groupImageUrl: $groupImageUrl, inviteCode: $inviteCode, startDate: $startDate, nextContributionDate: $nextContributionDate, createdAt: $createdAt, defaultInterestRate: $defaultInterestRate, maxRepaymentMonths: $maxRepaymentMonths, loanPenaltyRate: $loanPenaltyRate, loanPenaltyGraceDays: $loanPenaltyGraceDays, maxLoanMultiplier: $maxLoanMultiplier, minContributionsForLoan: $minContributionsForLoan, lateFineAmount: $lateFineAmount, fineGraceDays: $fineGraceDays)';
   }
 
   @override
@@ -1029,7 +1069,11 @@ class _$GroupModelImpl implements _GroupModel {
                 other.maxLoanMultiplier == maxLoanMultiplier) &&
             (identical(
                     other.minContributionsForLoan, minContributionsForLoan) ||
-                other.minContributionsForLoan == minContributionsForLoan));
+                other.minContributionsForLoan == minContributionsForLoan) &&
+            (identical(other.lateFineAmount, lateFineAmount) ||
+                other.lateFineAmount == lateFineAmount) &&
+            (identical(other.fineGraceDays, fineGraceDays) ||
+                other.fineGraceDays == fineGraceDays));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1059,7 +1103,9 @@ class _$GroupModelImpl implements _GroupModel {
         loanPenaltyRate,
         loanPenaltyGraceDays,
         maxLoanMultiplier,
-        minContributionsForLoan
+        minContributionsForLoan,
+        lateFineAmount,
+        fineGraceDays
       ]);
 
   /// Create a copy of GroupModel
@@ -1103,7 +1149,9 @@ abstract class _GroupModel implements GroupModel {
       final double loanPenaltyRate,
       final int loanPenaltyGraceDays,
       final double maxLoanMultiplier,
-      final int minContributionsForLoan}) = _$GroupModelImpl;
+      final int minContributionsForLoan,
+      final double lateFineAmount,
+      final int fineGraceDays}) = _$GroupModelImpl;
 
   factory _GroupModel.fromJson(Map<String, dynamic> json) =
       _$GroupModelImpl.fromJson;
@@ -1157,7 +1205,12 @@ abstract class _GroupModel implements GroupModel {
   @override
   double get maxLoanMultiplier; // savings × this = borrow limit
   @override
-  int get minContributionsForLoan;
+  int get minContributionsForLoan; // min deposits before eligible
+// ── Late-contribution fine rules ────────────────────────────────────────
+  @override
+  double get lateFineAmount; // RWF charged per missed period
+  @override
+  int get fineGraceDays;
 
   /// Create a copy of GroupModel
   /// with the given fields replaced by the non-null parameter values.

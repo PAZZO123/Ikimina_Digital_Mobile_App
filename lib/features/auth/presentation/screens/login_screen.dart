@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/services/auth_service.dart';
+import '../../../../core/services/group_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/widgets/shared_widgets.dart';
@@ -44,11 +45,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         onTimeout: () => throw 'Connection timed out. Please check your internet connection and try again.',
       );
 
-      // Invalidate the cached user so the provider re-subscribes to the
-      // newly signed-in user's Firestore document — prevents the previous
-      // account's data from briefly appearing.
-      ref.invalidate(currentUserProvider);
+      // Flush ALL cached provider data from the previous account so the
+      // new account starts with a clean slate.  We do NOT invalidate
+      // currentUserProvider itself — asyncExpand() handles the auth
+      // transition smoothly on its own; forcing a re-subscribe only adds
+      // an extra loading flash.
+      invalidateAllUserDataProviders(ref);
 
+      // Navigate to home.  The router's _AuthNotifier will also redirect
+      // automatically once Firebase Auth fires, so this is just a fast path.
       if (mounted) context.go(AppRoutes.home);
     } catch (e) {
       if (mounted) {

@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 
 class StorageService {
@@ -30,11 +31,7 @@ class StorageService {
         .child(userId)
         .child('profile.jpg');
 
-    final task = await ref.putFile(
-      file,
-      SettableMetadata(contentType: 'image/jpeg'),
-    );
-    return await task.ref.getDownloadURL();
+    return _uploadAndGetUrl(file, ref);
   }
 
   /// Upload group cover image — returns download URL.
@@ -44,11 +41,7 @@ class StorageService {
         .child('group_images')
         .child('$groupId.jpg');
 
-    final task = await ref.putFile(
-      file,
-      SettableMetadata(contentType: 'image/jpeg'),
-    );
-    return await task.ref.getDownloadURL();
+    return _uploadAndGetUrl(file, ref);
   }
 
   /// Upload contribution receipt — returns download URL.
@@ -58,11 +51,39 @@ class StorageService {
         .child('receipts')
         .child('$contributionId.jpg');
 
-    final task = await ref.putFile(
-      file,
-      SettableMetadata(contentType: 'image/jpeg'),
-    );
-    return await task.ref.getDownloadURL();
+    return _uploadAndGetUrl(file, ref);
+  }
+
+  /// Internal helper: uploads [file] to [ref] and returns the download URL.
+  /// Validates the TaskSnapshot state so a silent failure never triggers
+  /// a misleading `object-not-found` error from getDownloadURL().
+  static Future<String> _uploadAndGetUrl(File file, Reference ref) async {
+    try {
+      final uploadTask = ref.putFile(
+        file,
+        SettableMetadata(contentType: 'image/jpeg'),
+      );
+
+      final snapshot = await uploadTask;
+
+      if (snapshot.state != TaskState.success) {
+        throw Exception('Upload did not complete (state: ${snapshot.state}). '
+            'Please check your internet connection and try again.');
+      }
+
+      return await snapshot.ref.getDownloadURL();
+    } on FirebaseException catch (e) {
+      debugPrint('StorageService upload error: ${e.code} — ${e.message}');
+      if (e.code == 'permission-denied') {
+        throw Exception('Permission denied. Make sure you are signed in and '
+            'have the right to upload this file.');
+      }
+      if (e.code == 'object-not-found') {
+        throw Exception('Upload may have failed. Please check your internet '
+            'connection and try again.');
+      }
+      rethrow;
+    }
   }
 
   /// Delete a file from Firebase Storage by its download URL.

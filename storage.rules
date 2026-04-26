@@ -20,14 +20,14 @@ service firebase.storage {
     }
 
     // ─── User profile pictures ───
-    match /users/{userId}/profile{ext} {
+    match /users/{userId}/{filename} {
       allow read: if isSignedIn();
       allow write: if isOwner(userId) && isImageFile() && isUnder5MB();
       allow delete: if isOwner(userId);
     }
 
     // ─── Group cover images ───
-    match /groups/{groupId}/cover{ext} {
+    match /group_images/{filename} {
       allow read: if isSignedIn();
       allow write: if isSignedIn() && isImageFile() && isUnder5MB();
       allow delete: if isSignedIn();

@@ -5,6 +5,7 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../core/services/auth_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../../shared/models/app_models.dart';
 import '../../../auth/presentation/screens/profile_screen.dart';
 import '../../../dashboard/presentation/screens/dashboard_screen.dart';
 import '../../../groups/presentation/screens/groups_screen.dart';
@@ -21,6 +22,7 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   bool _profileCheckDone = false;
+  String? _lastSeenUserId; // track which user is active
 
   @override
   void initState() {
@@ -149,6 +151,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget build(BuildContext context) {
     final index = ref.watch(_navIndexProvider);
     final l10n = AppLocalizations.of(context)!;
+
+    // When the signed-in user changes (account switch), reset to the
+    // dashboard tab and re-run the profile-completion check.
+    ref.listen<AsyncValue<UserModel?>>(currentUserProvider, (prev, next) {
+      final prevId = prev?.valueOrNull?.id;
+      final nextId = next.valueOrNull?.id;
+      if (nextId != null && nextId != prevId) {
+        ref.read(_navIndexProvider.notifier).state = 0;
+        _profileCheckDone = false;
+        _lastSeenUserId = nextId;
+        Future.microtask(_checkProfile);
+      }
+    });
 
     final screens = [
       const DashboardScreen(),

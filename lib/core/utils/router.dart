@@ -1,8 +1,10 @@
+import 'dart:async';
+
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../constants/app_constants.dart';
-import '../services/auth_service.dart';
 import '../../features/auth/presentation/screens/splash_screen.dart';
 import '../../features/auth/presentation/screens/onboarding_screen.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
@@ -22,31 +24,71 @@ import '../../features/reports/presentation/screens/reports_screen.dart';
 import '../../features/auth/presentation/screens/profile_screen.dart';
 import '../../features/notifications/presentation/screens/notifications_screen.dart';
 
+// ─── Auth notifier ────────────────────────────────────────────────────────────
+//
+// A lightweight ChangeNotifier that mirrors FirebaseAuth's sign-in state.
+//
+// IMPORTANT: The router is created ONCE and uses this as its refreshListenable.
+// Previously, routerProvider watched authStateProvider (a Riverpod StreamProvider),
+// which caused a brand-new GoRouter to be created on every auth state change —
+// including the brief `loading` state that occurs during login.  Each new
+// GoRouter resets to initialLocation (/splash) and re-evaluates redirects while
+// isLoggedIn is false, sending the user back to /login momentarily.
+//
+// With a stable router the redirect logic simply re-runs in-place; no navigation
+// stack reset, no flicker back to the login screen.
+
+class _AuthNotifier extends ChangeNotifier {
+  late final StreamSubscription<User?> _sub;
+  bool _isLoggedIn;
+
+  _AuthNotifier() : _isLoggedIn = FirebaseAuth.instance.currentUser != null {
+    _sub = FirebaseAuth.instance.authStateChanges().listen((user) {
+      final next = user != null;
+      if (next != _isLoggedIn) {
+        _isLoggedIn = next;
+        notifyListeners();
+      }
+    });
+  }
+
+  bool get isLoggedIn => _isLoggedIn;
+
+  @override
+  void dispose() {
+    _sub.cancel();
+    super.dispose();
+  }
+}
+
+// ─── Router provider ──────────────────────────────────────────────────────────
+
 final routerProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(authStateProvider);
+  final notifier = _AuthNotifier();
+  ref.onDispose(notifier.dispose);
 
   return GoRouter(
     initialLocation: AppRoutes.splash,
-    refreshListenable: GoRouterRefreshStream(
-      authState.when(
-        data: (user) => Stream.value(user),
-        loading: () => const Stream.empty(),
-        error: (_, __) => const Stream.empty(),
-      ),
-    ),
+    refreshListenable: notifier,
     redirect: (context, state) {
-      final isLoggedIn = authState.valueOrNull != null;
-      final isAuthRoute = state.matchedLocation == AppRoutes.login ||
-          state.matchedLocation == AppRoutes.register ||
-          state.matchedLocation == AppRoutes.onboarding ||
-          state.matchedLocation == AppRoutes.splash ||
-          state.matchedLocation == AppRoutes.forgotPassword;
+      final isLoggedIn = notifier.isLoggedIn;
+      final loc = state.matchedLocation;
 
+      final isAuthRoute = loc == AppRoutes.login ||
+          loc == AppRoutes.register ||
+          loc == AppRoutes.onboarding ||
+          loc == AppRoutes.splash ||
+          loc == AppRoutes.forgotPassword;
+
+      // Not signed in and trying to access a protected route → send to login
       if (!isLoggedIn && !isAuthRoute) return AppRoutes.login;
-      if (isLoggedIn && (state.matchedLocation == AppRoutes.login ||
-          state.matchedLocation == AppRoutes.register)) {
+
+      // Signed in but sitting on an auth screen → send to home
+      if (isLoggedIn &&
+          (loc == AppRoutes.login || loc == AppRoutes.register)) {
         return AppRoutes.home;
       }
+
       return null;
     },
     routes: [
@@ -158,9 +200,3 @@ final routerProvider = Provider<GoRouter>((ref) {
     ),
   );
 });
-
-class GoRouterRefreshStream extends ChangeNotifier {
-  GoRouterRefreshStream(Stream stream) {
-    stream.listen((_) => notifyListeners());
-  }
-}
