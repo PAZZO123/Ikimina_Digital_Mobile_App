@@ -343,5 +343,10 @@
   "repaymentRequestSent": "Repayment submitted! Waiting for admin approval.",
   "repaymentPending": "You have a repayment pending admin approval.",
   "pendingRepayments": "Pending Repayments",
-  "amountRWF": "Amount (RWF)"
+  "amountRWF": "Amount (RWF)",
+
+  "continueWithGoogle": "Continue with Google",
+  "orContinueWith": "Or continue with",
+  "didntReceiveEmail": "Didn't receive the email?",
+  "resend": "Resend"
 }

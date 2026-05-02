@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import '../models/app_models.dart';
+import '../../core/constants/app_constants.dart';
+import '../../core/services/group_service.dart';
+import '../../core/services/auth_service.dart';
 import '../../core/theme/app_theme.dart';
 
 // ─────────────── CURRENCY FORMATTER ───────────────
@@ -448,5 +453,312 @@ class PrimaryButton extends StatelessWidget {
             ),
     );
     return expanded ? SizedBox(width: double.infinity, child: btn) : btn;
+  }
+}
+
+// ─────────────── GOOGLE SIGN-IN BUTTON ───────────────
+class GoogleSignInButton extends StatelessWidget {
+  final String label;
+  final bool isLoading;
+  final VoidCallback onTap;
+
+  const GoogleSignInButton({
+    super.key,
+    required this.label,
+    required this.isLoading,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      height: 52,
+      child: OutlinedButton(
+        onPressed: isLoading ? null : onTap,
+        style: OutlinedButton.styleFrom(
+          side: BorderSide(color: context.borderColor, width: 1.5),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          backgroundColor: context.cardSurface,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+        ),
+        child: isLoading
+            ? const SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            : Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Google "G" logo
+                  Container(
+                    width: 24,
+                    height: 24,
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white,
+                    ),
+                    child: const Center(
+                      child: Text(
+                        'G',
+                        style: TextStyle(
+                          color: Color(0xFF4285F4),
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                          height: 1.0,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: context.textPrim,
+                    ),
+                  ),
+                ],
+              ),
+      ),
+    );
+  }
+}
+
+// ─────────────── PAY FINE SHEET ───────────────
+/// Bottom sheet that lets a fined member submit a fine payment request.
+/// Used from both the Notifications screen and the group Contributions tab.
+class PayFineSheet extends ConsumerStatefulWidget {
+  final String fineId;
+  const PayFineSheet({super.key, required this.fineId});
+
+  @override
+  ConsumerState<PayFineSheet> createState() => _PayFineSheetState();
+}
+
+class _PayFineSheetState extends ConsumerState<PayFineSheet> {
+  bool _submitting = false;
+  bool _submitted = false;
+
+  Future<void> _submit(FineModel fine) async {
+    setState(() => _submitting = true);
+    try {
+      final currentUser = ref.read(currentUserProvider).valueOrNull;
+      if (currentUser == null) return;
+
+      final groupSnap = await FirebaseFirestore.instance
+          .collection(AppConstants.groupsCollection)
+          .doc(fine.groupId)
+          .get();
+      final groupData = groupSnap.data() ?? {};
+      final adminId = groupData['adminId'] as String? ?? '';
+      final groupName = groupData['name'] as String? ?? fine.groupId;
+
+      await ref.read(groupServiceProvider).submitFinePayment(
+            fineId: fine.id,
+            groupId: fine.groupId,
+            groupName: groupName,
+            memberId: currentUser.id,
+            memberName: currentUser.fullName,
+            amount: fine.amount,
+            reason: fine.reason,
+            adminId: adminId,
+          );
+      if (mounted) setState(() => _submitted = true);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<DocumentSnapshot>(
+      future: FirebaseFirestore.instance
+          .collection(AppConstants.finesCollection)
+          .doc(widget.fineId)
+          .get(),
+      builder: (context, snap) {
+        if (snap.connectionState == ConnectionState.waiting) {
+          return const SizedBox(
+              height: 200,
+              child: Center(child: CircularProgressIndicator()));
+        }
+        if (!snap.hasData || !snap.data!.exists) {
+          return const SizedBox(
+              height: 200,
+              child: Center(child: Text('Fine not found.')));
+        }
+
+        final fine = FineModel.fromFirestore(snap.data!);
+
+        if (_submitted) {
+          return Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.check_circle_rounded,
+                    color: AppColors.success, size: 64),
+                const SizedBox(height: 16),
+                Text('Payment Submitted!',
+                    style: Theme.of(context).textTheme.titleLarge),
+                const SizedBox(height: 8),
+                Text(
+                  'Your payment request has been sent to the admin for confirmation.',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodySmall
+                      ?.copyWith(color: context.textHintColor),
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Close'),
+                ),
+              ],
+            ),
+          );
+        }
+
+        if (fine.status == 'paid') {
+          return Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.check_circle_rounded,
+                    color: AppColors.success, size: 64),
+                const SizedBox(height: 16),
+                Text('Fine Already Paid',
+                    style: Theme.of(context).textTheme.titleLarge),
+                const SizedBox(height: 8),
+                Text('This fine has already been paid and confirmed.',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodySmall
+                        ?.copyWith(color: context.textHintColor)),
+                const SizedBox(height: 24),
+                ElevatedButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('Close')),
+              ],
+            ),
+          );
+        }
+
+        return Padding(
+          padding: EdgeInsets.only(
+            left: 24,
+            right: 24,
+            top: 24,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // drag handle
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: context.borderColor,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text('Pay Fine',
+                  style: Theme.of(context).textTheme.titleLarge),
+              const SizedBox(height: 4),
+              Text(
+                'Submit your payment and the admin will confirm it.',
+                style: Theme.of(context)
+                    .textTheme
+                    .bodySmall
+                    ?.copyWith(color: context.textHintColor),
+              ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColors.error.withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.error.withOpacity(0.2)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _row(context, 'Amount',
+                        'RWF ${fine.amount.toStringAsFixed(0)}',
+                        valueColor: AppColors.error),
+                    const SizedBox(height: 8),
+                    _row(context, 'Reason', fine.reason),
+                    const SizedBox(height: 8),
+                    _row(context, 'Status', fine.status.toUpperCase(),
+                        valueColor: fine.status == 'paid'
+                            ? AppColors.success
+                            : AppColors.error),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: _submitting ? null : () => _submit(fine),
+                  icon: _submitting
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2, color: Colors.white))
+                      : const Icon(Icons.send_rounded),
+                  label:
+                      Text(_submitting ? 'Submitting...' : 'Submit Payment'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _row(BuildContext context, String label, String value,
+      {Color? valueColor}) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label,
+            style: Theme.of(context)
+                .textTheme
+                .bodySmall
+                ?.copyWith(color: context.textHintColor)),
+        Flexible(
+          child: Text(value,
+              textAlign: TextAlign.end,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: valueColor, fontWeight: FontWeight.w600)),
+        ),
+      ],
+    );
   }
 }

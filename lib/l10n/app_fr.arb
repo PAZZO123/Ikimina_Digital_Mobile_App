@@ -342,5 +342,10 @@
   "repaymentRequestSent": "Remboursement soumis ! En attente d'approbation.",
   "repaymentPending": "Un remboursement est en attente d'approbation.",
   "pendingRepayments": "Remboursements en attente",
-  "amountRWF": "Montant (RWF)"
+  "amountRWF": "Montant (RWF)",
+
+  "continueWithGoogle": "Continuer avec Google",
+  "orContinueWith": "Ou continuer avec",
+  "didntReceiveEmail": "Vous n'avez pas reçu l'e-mail ?",
+  "resend": "Renvoyer"
 }

@@ -22,6 +22,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _emailCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
   bool _loading = false;
+  bool _googleLoading = false;
   bool _obscure = true;
   String? _error;
 
@@ -30,6 +31,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     _emailCtrl.dispose();
     _passwordCtrl.dispose();
     super.dispose();
+  }
+
+  Future<void> _signInWithGoogle() async {
+    setState(() { _googleLoading = true; _error = null; });
+    try {
+      final user = await ref.read(authServiceProvider).signInWithGoogle();
+      if (user == null) {
+        // User cancelled the Google account picker
+        if (mounted) setState(() => _googleLoading = false);
+        return;
+      }
+      invalidateAllUserDataProviders(ref);
+      if (mounted) context.go(AppRoutes.home);
+    } catch (e) {
+      if (mounted) setState(() { _error = e.toString(); _googleLoading = false; });
+    }
   }
 
   Future<void> _login() async {
@@ -177,6 +194,35 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                 const SizedBox(height: 24),
 
+                // ── OR divider ──
+                Row(
+                  children: [
+                    Expanded(child: Divider(color: context.borderColor)),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 14),
+                      child: Text(
+                        l10n.orContinueWith,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: context.textHintColor,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    Expanded(child: Divider(color: context.borderColor)),
+                  ],
+                ).animate().fadeIn(delay: 380.ms),
+                const SizedBox(height: 16),
+
+                // ── Google button ──
+                GoogleSignInButton(
+                  label: l10n.continueWithGoogle,
+                  isLoading: _googleLoading,
+                  onTap: _signInWithGoogle,
+                ).animate().fadeIn(delay: 400.ms),
+
+                const SizedBox(height: 24),
+
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -187,7 +233,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       child: Text(l10n.createAccount),
                     ),
                   ],
-                ).animate().fadeIn(delay: 400.ms),
+                ).animate().fadeIn(delay: 440.ms),
 
                 const SizedBox(height: 40),
 
@@ -214,7 +260,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
                     ],
                   ),
-                ).animate().fadeIn(delay: 450.ms),
+                ).animate().fadeIn(delay: 480.ms),
               ],
             ),
           ),
@@ -223,3 +269,4 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     );
   }
 }
+

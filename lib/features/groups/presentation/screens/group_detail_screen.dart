@@ -215,7 +215,11 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen>
                 _OverviewTab(group: group, isAdmin: isAdmin),
                 _ContributionsTab(group: group, isAdmin: isAdmin),
                 _LoansTab(group: group, isAdmin: isAdmin),
-                _PayoutsTab(group: group),
+                _PayoutsTab(
+                  group: group,
+                  isAdmin: isAdmin,
+                  currentUserId: currentUser?.id ?? '',
+                ),
                 _AnnouncementsTab(group: group, isAdmin: isAdmin),
               ],
             ),
@@ -917,10 +921,13 @@ class _ContributionsTabState extends ConsumerState<_ContributionsTab> {
     final contribAsync = ref.watch(groupContributionsProvider(group.id));
     final pendingAsync = ref.watch(_pendingContribRequestsProvider(group.id));
     final finesAsync = ref.watch(groupFinesProvider(group.id));
+    final finePaymentRequestsAsync =
+        ref.watch(finePaymentRequestsProvider(group.id));
     final currentUser = ref.watch(currentUserProvider).valueOrNull;
 
     final pendingRequests = pendingAsync.valueOrNull ?? [];
     final fines = finesAsync.valueOrNull ?? [];
+    final pendingFinePayments = finePaymentRequestsAsync.valueOrNull ?? [];
 
     return Scaffold(
       floatingActionButton: FloatingActionButton.extended(
@@ -955,7 +962,39 @@ class _ContributionsTabState extends ConsumerState<_ContributionsTab> {
             const SizedBox(height: 8),
             ...fines
                 .where((f) => f.status == 'unpaid')
-                .map((f) => _FineTile(fine: f, isAdmin: isAdmin)),
+                .map((f) => _FineTile(
+                      fine: f,
+                      isAdmin: isAdmin,
+                      currentUserId: currentUser?.id ?? '',
+                    )),
+            const SizedBox(height: 16),
+          ],
+
+          // ── Admin: Pending Fine Payment Requests ──
+          if (isAdmin && pendingFinePayments.isNotEmpty) ...[
+            _SectionHeader(
+              title: 'Pending Fine Payments',
+              trailing: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: AppColors.warning.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  '${pendingFinePayments.length}',
+                  style: const TextStyle(
+                      color: AppColors.warning,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 12),
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            ...pendingFinePayments.map((req) => _FinePaymentRequestTile(
+                  req: req,
+                  group: group,
+                )),
             const SizedBox(height: 16),
           ],
 
@@ -1025,7 +1064,12 @@ class _ContributionsTabState extends ConsumerState<_ContributionsTab> {
 class _FineTile extends ConsumerStatefulWidget {
   final FineModel fine;
   final bool isAdmin;
-  const _FineTile({required this.fine, required this.isAdmin});
+  final String currentUserId;
+  const _FineTile({
+    required this.fine,
+    required this.isAdmin,
+    required this.currentUserId,
+  });
 
   @override
   ConsumerState<_FineTile> createState() => _FineTileState();
@@ -1131,6 +1175,34 @@ class _FineTileState extends ConsumerState<_FineTile> {
                                   fontWeight: FontWeight.w600)),
                         ),
                       ),
+              ] else if (fine.memberId == widget.currentUserId) ...[
+                // ── Fined member sees "Pay Fine" button ──
+                const SizedBox(height: 6),
+                GestureDetector(
+                  onTap: () => showModalBottomSheet(
+                    context: context,
+                    isScrollControlled: true,
+                    backgroundColor: context.bg,
+                    shape: const RoundedRectangleBorder(
+                      borderRadius:
+                          BorderRadius.vertical(top: Radius.circular(20)),
+                    ),
+                    builder: (_) => PayFineSheet(fineId: fine.id),
+                  ),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: AppColors.error.withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Text('Pay Fine',
+                        style: TextStyle(
+                            color: AppColors.error,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600)),
+                  ),
+                ),
               ],
             ],
           ),
@@ -1906,7 +1978,13 @@ class _LoanStat extends StatelessWidget {
 // This tab shows each member's individual savings summary.
 class _PayoutsTab extends ConsumerWidget {
   final GroupModel group;
-  const _PayoutsTab({required this.group});
+  final bool isAdmin;
+  final String currentUserId;
+  const _PayoutsTab({
+    required this.group,
+    required this.isAdmin,
+    required this.currentUserId,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -2021,13 +2099,19 @@ class _PayoutsTab extends ConsumerWidget {
                       : 1.0 / group.memberIds.length);
               final estimatedShare = group.totalBalance * shareRatio;
 
+              // Show fine balance for current user or all members if admin
+              final showFineBalance =
+                  isAdmin || memberId == currentUserId;
+
               return _MemberSavingsTile(
                 memberId: memberId,
+                groupId: group.id,
                 name: name,
                 contributed: contributed,
                 shareRatio: shareRatio,
                 estimatedShare: estimatedShare,
                 isAdmin: group.adminId == memberId,
+                showFineBalance: showFineBalance,
               );
             }),
 
@@ -2067,6 +2151,108 @@ class _PayoutsTab extends ConsumerWidget {
   }
 }
 
+// ─── Fine Payment Request Tile (admin confirms) ──────────────────────────────
+class _FinePaymentRequestTile extends ConsumerStatefulWidget {
+  final FinePaymentRequest req;
+  final GroupModel group;
+  const _FinePaymentRequestTile({required this.req, required this.group});
+
+  @override
+  ConsumerState<_FinePaymentRequestTile> createState() =>
+      _FinePaymentRequestTileState();
+}
+
+class _FinePaymentRequestTileState
+    extends ConsumerState<_FinePaymentRequestTile> {
+  bool _confirming = false;
+
+  Future<void> _confirm() async {
+    setState(() => _confirming = true);
+    try {
+      await ref.read(groupServiceProvider).confirmFinePayment(
+            requestId: widget.req.id,
+            adminId: ref.read(currentUserProvider).valueOrNull?.id ?? '',
+            adminName:
+                ref.read(currentUserProvider).valueOrNull?.fullName ?? '',
+            memberIds: widget.group.memberIds,
+          );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Fine payment confirmed!')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _confirming = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final req = widget.req;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: context.cardSurface,
+        borderRadius: BorderRadius.circular(14),
+        border:
+            Border.all(color: AppColors.warning.withOpacity(0.4)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.payment_rounded,
+                  color: AppColors.warning, size: 18),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  '${req.memberName} — RWF ${req.amount.toStringAsFixed(0)}',
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Reason: ${req.reason}',
+            style: Theme.of(context)
+                .textTheme
+                .bodySmall
+                ?.copyWith(color: context.textHintColor),
+          ),
+          const SizedBox(height: 10),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: _confirming ? null : _confirm,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.success,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 10),
+              ),
+              child: _confirming
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: Colors.white))
+                  : const Text('Confirm Payment'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 // Small stat column used inside the gradient summary card
 class _SavingsStat extends StatelessWidget {
   final String label;
@@ -2097,26 +2283,42 @@ class _SavingsStat extends StatelessWidget {
 }
 
 // Per-member savings card
-class _MemberSavingsTile extends StatelessWidget {
+class _MemberSavingsTile extends ConsumerWidget {
   final String memberId;
+  final String groupId;
   final String name;
   final double contributed;
   final double shareRatio;
   final double estimatedShare;
   final bool isAdmin;
+  final bool showFineBalance;
 
   const _MemberSavingsTile({
     required this.memberId,
+    required this.groupId,
     required this.name,
     required this.contributed,
     required this.shareRatio,
     required this.estimatedShare,
     required this.isAdmin,
+    this.showFineBalance = false,
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final pct = (shareRatio * 100).clamp(0.0, 100.0);
+
+    // Compute unpaid fine balance
+    double unpaidFines = 0.0;
+    if (showFineBalance) {
+      final finesAsync =
+          ref.watch(memberFinesProvider((groupId, memberId)));
+      final fines = finesAsync.valueOrNull ?? [];
+      unpaidFines = fines
+          .where((f) => f.status == 'unpaid')
+          .fold(0.0, (sum, f) => sum + f.amount);
+    }
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
@@ -2198,6 +2400,33 @@ class _MemberSavingsTile extends StatelessWidget {
                   value: formatRWF(estimatedShare),
                 ),
               ),
+              if (showFineBalance)
+                Expanded(
+                  child: Column(
+                    children: [
+                      Text(
+                        unpaidFines > 0
+                            ? '-${formatRWF(unpaidFines)}'
+                            : formatRWF(0),
+                        style: TextStyle(
+                          color: unpaidFines > 0
+                              ? AppColors.error
+                              : AppColors.success,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Fine Balance',
+                        style: TextStyle(
+                            color: context.textHintColor, fontSize: 11),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                ),
             ],
           ),
         ],

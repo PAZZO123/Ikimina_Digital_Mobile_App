@@ -342,5 +342,10 @@
   "repaymentRequestSent": "Kwishyura byoherejwe! Gutegereza kwemeza.",
   "repaymentPending": "Hari kwishyura gutegereza kwemezwa.",
   "pendingRepayments": "Kwishyura Gutegereza",
-  "amountRWF": "Amafaranga (RWF)"
+  "amountRWF": "Amafaranga (RWF)",
+
+  "continueWithGoogle": "Komeza na Google",
+  "orContinueWith": "Cyangwa komeza na",
+  "didntReceiveEmail": "Ntubonanye imeyili?",
+  "resend": "Ohereza nanone"
 }

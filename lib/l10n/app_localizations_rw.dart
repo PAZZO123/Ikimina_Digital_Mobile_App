@@ -839,4 +839,16 @@ class AppLocalizationsRw extends AppLocalizations {
 
   @override
   String get pendingRepayments => 'Kwishyura Gutegereza';
+
+  @override
+  String get continueWithGoogle => 'Komeza na Google';
+
+  @override
+  String get orContinueWith => 'Cyangwa komeza na';
+
+  @override
+  String get didntReceiveEmail => 'Ntubonanye imeyili?';
+
+  @override
+  String get resend => 'Ohereza nanone';
 }

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/services/auth_service.dart';
+import '../../../../core/services/group_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../shared/widgets/shared_widgets.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -24,6 +25,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _passwordCtrl = TextEditingController();
   final _confirmCtrl = TextEditingController();
   bool _loading = false;
+  bool _googleLoading = false;
   bool _obscure = true;
   bool _agreed = false;
   String? _error;
@@ -36,6 +38,21 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     _passwordCtrl.dispose();
     _confirmCtrl.dispose();
     super.dispose();
+  }
+
+  Future<void> _signInWithGoogle() async {
+    setState(() { _googleLoading = true; _error = null; });
+    try {
+      final user = await ref.read(authServiceProvider).signInWithGoogle();
+      if (user == null) {
+        if (mounted) setState(() => _googleLoading = false);
+        return;
+      }
+      invalidateAllUserDataProviders(ref);
+      if (mounted) context.go(AppRoutes.home);
+    } catch (e) {
+      if (mounted) setState(() { _error = e.toString(); _googleLoading = false; });
+    }
   }
 
   Future<void> _register() async {
@@ -230,6 +247,36 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 ).animate().fadeIn(delay: 400.ms),
 
                 const SizedBox(height: 20),
+
+                // ── OR divider ──
+                Row(
+                  children: [
+                    Expanded(child: Divider(color: context.borderColor)),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 14),
+                      child: Text(
+                        l10n.orContinueWith,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: context.textHintColor,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    Expanded(child: Divider(color: context.borderColor)),
+                  ],
+                ).animate().fadeIn(delay: 420.ms),
+                const SizedBox(height: 14),
+
+                // ── Google button ──
+                GoogleSignInButton(
+                  label: l10n.continueWithGoogle,
+                  isLoading: _googleLoading,
+                  onTap: _signInWithGoogle,
+                ).animate().fadeIn(delay: 440.ms),
+
+                const SizedBox(height: 20),
+
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -240,7 +287,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       child: Text(l10n.signInLink),
                     ),
                   ],
-                ).animate().fadeIn(delay: 450.ms),
+                ).animate().fadeIn(delay: 460.ms),
                 const SizedBox(height: 32),
               ],
             ),

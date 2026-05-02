@@ -125,6 +125,17 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // ─── Fine Payment Requests ───
+    match /finePaymentRequests/{reqId} {
+      allow read: if isSignedIn() && (
+        isOwner(resource.data.memberId) ||
+        isGroupAdmin(resource.data.groupId)
+      );
+      allow create: if isSignedIn() && request.auth.uid == request.resource.data.memberId;
+      allow update: if isGroupAdmin(resource.data.groupId);
+      allow delete: if false;
+    }
+
     // ─── Group Broadcasts ───
     match /groupBroadcasts/{broadcastId} {
       // Group members can read broadcasts for their group

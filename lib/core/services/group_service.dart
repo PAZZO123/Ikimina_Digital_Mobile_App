@@ -118,6 +118,20 @@ final groupFinesProvider =
       ref.read(groupServiceProvider).streamGroupFines(groupId));
 });
 
+/// Streams pending fine payment requests for [groupId] (admin view).
+final finePaymentRequestsProvider =
+    StreamProvider.family<List<FinePaymentRequest>, String>((ref, groupId) {
+  return _safeList(
+      ref.read(groupServiceProvider).streamFinePaymentRequests(groupId));
+});
+
+/// Streams all fines for a specific member in a group.
+final memberFinesProvider =
+    StreamProvider.family<List<FineModel>, (String, String)>((ref, params) {
+  return _safeList(
+      ref.read(groupServiceProvider).streamMemberFines(params.$1, params.$2));
+});
+
 // ─── Account-switch utility ───────────────────────────────────────────────────
 
 /// Invalidates every user-specific Riverpod provider so the next account
@@ -140,6 +154,8 @@ void invalidateAllUserDataProviders(WidgetRef ref) {
   ref.invalidate(memberContributionCountProvider);
   ref.invalidate(groupBroadcastsProvider);
   ref.invalidate(groupFinesProvider);
+  ref.invalidate(finePaymentRequestsProvider);
+  ref.invalidate(memberFinesProvider);
 }
 
 class GroupService {
@@ -618,7 +634,7 @@ class GroupService {
   }
 
   // ─── Issue Fine ───
-  Future<void> issueFine({
+  Future<String> issueFine({
     required String groupId,
     required String memberId,
     required String memberName,
@@ -637,6 +653,7 @@ class GroupService {
     );
 
     await docRef.set(fine.toJson());
+    return docRef.id;
   }
 
   // ─── Stream Fines ───
@@ -1205,6 +1222,137 @@ class GroupService {
     });
   }
 
+  // ─── Stream Member Fines ──────────────────────────────────────────────────
+  Stream<List<FineModel>> streamMemberFines(
+      String groupId, String memberId) {
+    return _db
+        .collection(AppConstants.finesCollection)
+        .where('groupId', isEqualTo: groupId)
+        .where('memberId', isEqualTo: memberId)
+        .snapshots()
+        .map((snap) {
+          final list = snap.docs.map(FineModel.fromFirestore).toList();
+          list.sort((a, b) => b.issuedAt.compareTo(a.issuedAt));
+          return list;
+        });
+  }
+
+  // ─── Fine Payment Requests ───────────────────────────────────────────────
+
+  /// Stream pending fine payment requests for [groupId] (admin view).
+  Stream<List<FinePaymentRequest>> streamFinePaymentRequests(String groupId) {
+    return _db
+        .collection(AppConstants.finePaymentRequestsCollection)
+        .where('groupId', isEqualTo: groupId)
+        .where('status', isEqualTo: 'pending')
+        .snapshots()
+        .map((s) => s.docs.map(FinePaymentRequest.fromFirestore).toList()
+          ..sort((a, b) {
+            final aDate = a.createdAt ?? DateTime(2000);
+            final bDate = b.createdAt ?? DateTime(2000);
+            return bDate.compareTo(aDate);
+          }));
+  }
+
+  /// Member submits a fine payment request — admin must confirm it.
+  Future<void> submitFinePayment({
+    required String fineId,
+    required String groupId,
+    required String groupName,
+    required String memberId,
+    required String memberName,
+    required double amount,
+    required String reason,
+    required String adminId,
+  }) async {
+    final ref =
+        _db.collection(AppConstants.finePaymentRequestsCollection).doc();
+    await ref.set({
+      'fineId': fineId,
+      'groupId': groupId,
+      'groupName': groupName,
+      'memberId': memberId,
+      'memberName': memberName,
+      'amount': amount,
+      'reason': reason,
+      'status': 'pending',
+      'createdAt': Timestamp.now(),
+      'confirmedBy': null,
+      'confirmedAt': null,
+    });
+
+    // Notify admin
+    await _sendNotification(
+      userId: adminId,
+      title: '💰 Fine Payment Request',
+      body:
+          '$memberName submitted payment of RWF ${amount.toStringAsFixed(0)} for a fine. Reason: $reason. Tap to confirm.',
+      type: 'fine_payment',
+      groupId: groupId,
+      actionId: ref.id,
+    );
+  }
+
+  /// Admin confirms a fine payment — marks request confirmed + fine paid.
+  Future<void> confirmFinePayment({
+    required String requestId,
+    required String adminId,
+    required String adminName,
+    required List<String> memberIds,
+  }) async {
+    final reqRef = _db
+        .collection(AppConstants.finePaymentRequestsCollection)
+        .doc(requestId);
+    final reqSnap = await reqRef.get();
+    final req = FinePaymentRequest.fromFirestore(reqSnap);
+
+    final batch = _db.batch();
+
+    // Update request status
+    batch.update(reqRef, {
+      'status': 'confirmed',
+      'confirmedBy': adminId,
+      'confirmedAt': Timestamp.now(),
+    });
+
+    // Update fine status
+    batch.update(
+      _db.collection(AppConstants.finesCollection).doc(req.fineId),
+      {
+        'status': 'paid',
+        'paidAt': Timestamp.now(),
+        'confirmedBy': adminId,
+      },
+    );
+
+    await batch.commit();
+
+    // Notify the fined member
+    await _sendNotification(
+      userId: req.memberId,
+      title: '✅ Fine Cleared',
+      body:
+          'Your fine of RWF ${req.amount.toStringAsFixed(0)} has been confirmed as paid! Your fine balance is now cleared.',
+      type: 'fine',
+      groupId: req.groupId,
+      actionId: req.fineId,
+    );
+
+    // Notify all other members
+    final otherMembers =
+        memberIds.where((id) => id != req.memberId).toList();
+    if (otherMembers.isNotEmpty) {
+      await _notifyMembers(
+        memberIds: otherMembers,
+        title: '✅ Fine Paid',
+        body:
+            '${req.memberName} has paid their fine of RWF ${req.amount.toStringAsFixed(0)}.',
+        type: 'fine',
+        groupId: req.groupId,
+      );
+    }
+  }
+
   // ─── Issue Fine Manually (admin action) ───────────────────────────────────
   // Issues a fine to a specific member and broadcasts an announcement to the
   // entire group so everyone is aware.
@@ -1219,8 +1367,8 @@ class GroupService {
     required String adminName,
     required List<String> memberIds,
   }) async {
-    // 1. Write the fine document
-    await issueFine(
+    // 1. Write the fine document and get its ID
+    final fineId = await issueFine(
       groupId: groupId,
       memberId: memberId,
       memberName: memberName,
@@ -1228,7 +1376,33 @@ class GroupService {
       reason: reason,
     );
 
-    // 2. Announce to the whole group
+    // 2. Personal notification to the fined member
+    await _sendNotification(
+      userId: memberId,
+      title: '⚠️ You received a fine',
+      body:
+          'You were fined RWF ${amount.toStringAsFixed(0)} because: $reason. Tap to pay.',
+      type: 'fine',
+      groupId: groupId,
+      actionId: fineId,
+    );
+
+    // 3. Notify all other members (not the fined one, not the admin)
+    final otherMembers =
+        memberIds.where((id) => id != memberId && id != adminId).toList();
+    if (otherMembers.isNotEmpty) {
+      await _notifyMembers(
+        memberIds: otherMembers,
+        title: '⚠️ Fine Issued',
+        body:
+            '$memberName was fined RWF ${amount.toStringAsFixed(0)}. Reason: $reason',
+        type: 'fine',
+        groupId: groupId,
+        actionId: fineId,
+      );
+    }
+
+    // 4. Announce to the whole group
     await sendBroadcast(
       groupId: groupId,
       groupName: groupName,

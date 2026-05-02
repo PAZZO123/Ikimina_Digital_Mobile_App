@@ -835,4 +835,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pendingRepayments => 'Pending Repayments';
+
+  @override
+  String get continueWithGoogle => 'Continue with Google';
+
+  @override
+  String get orContinueWith => 'Or continue with';
+
+  @override
+  String get didntReceiveEmail => 'Didn\'t receive the email?';
+
+  @override
+  String get resend => 'Resend';
 }

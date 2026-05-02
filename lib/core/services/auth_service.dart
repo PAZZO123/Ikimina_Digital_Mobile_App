@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import '../../shared/models/app_models.dart';
 import '../constants/app_constants.dart';
 
@@ -153,6 +154,61 @@ class AuthService {
       return UserModel.fromFirestore(userDoc);
     } on FirebaseAuthException catch (e) {
       throw _handleAuthException(e);
+    }
+  }
+
+  // ─── Google Sign-In ───
+  /// Returns null when the user dismisses the account picker (cancelled).
+  Future<UserModel?> signInWithGoogle() async {
+    try {
+      final googleUser = await GoogleSignIn().signIn();
+      if (googleUser == null) return null; // user cancelled
+
+      final googleAuth = await googleUser.authentication;
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      final userCredential = await _auth.signInWithCredential(credential);
+      final firebaseUser = userCredential.user!;
+      final uid = firebaseUser.uid;
+
+      final userDoc = await _firestore
+          .collection(AppConstants.usersCollection)
+          .doc(uid)
+          .get();
+
+      if (!userDoc.exists) {
+        // First-time Google sign-in — create the Firestore profile.
+        final newUser = UserModel(
+          id: uid,
+          fullName: firebaseUser.displayName ??
+              (firebaseUser.email ?? '').split('@')[0],
+          email: firebaseUser.email ?? '',
+          phone: '',
+          role: AppConstants.roleMember,
+          createdAt: DateTime.now(),
+        );
+        await createUserDoc(newUser);
+        return newUser;
+      }
+
+      // Touch lastSeen for returning users (fire-and-forget).
+      _firestore
+          .collection(AppConstants.usersCollection)
+          .doc(uid)
+          .set({'lastSeen': FieldValue.serverTimestamp()}, SetOptions(merge: true));
+
+      return UserModel.fromFirestore(userDoc);
+    } on FirebaseAuthException catch (e) {
+      throw _handleAuthException(e);
+    } catch (e) {
+      final msg = e.toString();
+      if (msg.contains('sign_in_canceled') || msg.contains('canceled')) {
+        return null; // treat as cancellation
+      }
+      throw 'Google sign-in failed. Please try again.';
     }
   }
 

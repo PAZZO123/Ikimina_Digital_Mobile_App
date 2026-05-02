@@ -16,6 +16,7 @@ class AppConstants {
   static const String groupBroadcastsCollection = 'groupBroadcasts';
   static const String contributionRequestsCollection = 'contributionRequests';
   static const String repaymentRequestsCollection = 'repaymentRequests';
+  static const String finePaymentRequestsCollection = 'finePaymentRequests';
 
   // Shared Preferences Keys
   static const String prefUserId = 'user_id';

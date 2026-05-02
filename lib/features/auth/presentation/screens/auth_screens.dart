@@ -8,6 +8,7 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../core/services/auth_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../../shared/widgets/shared_widgets.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -257,99 +258,297 @@ class ForgotPasswordScreen extends ConsumerStatefulWidget {
 }
 
 class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
+  final _formKey = GlobalKey<FormState>();
   final _emailCtrl = TextEditingController();
   bool _loading = false;
   bool _sent = false;
+  String? _error;
+
+  @override
+  void dispose() {
+    _emailCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _send() async {
+    if (!_formKey.currentState!.validate()) return;
+    setState(() { _loading = true; _error = null; });
+    try {
+      await ref
+          .read(authServiceProvider)
+          .sendPasswordReset(_emailCtrl.text.trim());
+      if (mounted) setState(() { _sent = true; _loading = false; });
+    } catch (e) {
+      if (mounted) setState(() { _error = e.toString(); _loading = false; });
+    }
+  }
+
+  Future<void> _resend() async {
+    setState(() { _loading = true; _error = null; });
+    try {
+      await ref
+          .read(authServiceProvider)
+          .sendPasswordReset(_emailCtrl.text.trim());
+      if (mounted) {
+        setState(() => _loading = false);
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Reset link resent! Check your inbox.'),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) setState(() { _error = e.toString(); _loading = false; });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.resetPassword)),
-      body: Padding(
-        padding: const EdgeInsets.all(24),
-        child: _sent
-            ? _buildSuccess(l10n)
-            : _buildForm(l10n),
+      backgroundColor: context.bg,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded),
+          onPressed: () => context.go(AppRoutes.login),
+        ),
+      ),
+      body: SafeArea(
+        child: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 400),
+          transitionBuilder: (child, anim) => FadeTransition(
+            opacity: anim,
+            child: SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0.05, 0),
+                end: Offset.zero,
+              ).animate(anim),
+              child: child,
+            ),
+          ),
+          child: _sent
+              ? _buildSuccess(l10n)
+              : _buildForm(l10n),
+        ),
       ),
     );
   }
 
   Widget _buildForm(AppLocalizations l10n) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          l10n.resetPasswordInstructions,
-          style: Theme.of(context).textTheme.bodyLarge,
+    return SingleChildScrollView(
+      key: const ValueKey('form'),
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 16),
+
+            // ── Icon ──
+            Container(
+              width: 72,
+              height: 72,
+              decoration: BoxDecoration(
+                gradient: AppColors.primaryGradient,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: const Icon(Icons.lock_reset_rounded,
+                  size: 36, color: Colors.white),
+            ).animate().scale(curve: Curves.elasticOut),
+            const SizedBox(height: 24),
+
+            Text(l10n.resetPassword,
+                style: Theme.of(context).textTheme.displaySmall)
+                .animate().fadeIn(delay: 100.ms),
+            const SizedBox(height: 8),
+            Text(l10n.resetPasswordInstructions,
+                style: Theme.of(context).textTheme.bodyMedium)
+                .animate().fadeIn(delay: 150.ms),
+            const SizedBox(height: 32),
+
+            // ── Error banner ──
+            if (_error != null)
+              Container(
+                padding: const EdgeInsets.all(14),
+                margin: const EdgeInsets.only(bottom: 20),
+                decoration: BoxDecoration(
+                  color: AppColors.error.withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.error.withOpacity(0.3)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.error_outline,
+                        color: AppColors.error, size: 18),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(_error!,
+                          style: const TextStyle(
+                              color: AppColors.error, fontSize: 13)),
+                    ),
+                  ],
+                ),
+              ).animate().fadeIn().shakeX(),
+
+            // ── Email field ──
+            AppTextField(
+              controller: _emailCtrl,
+              label: l10n.email,
+              hint: 'you@example.com',
+              prefixIcon: Icons.email_outlined,
+              keyboardType: TextInputType.emailAddress,
+              textInputAction: TextInputAction.done,
+              validator: (v) {
+                if (v == null || v.isEmpty) return l10n.errorRequired;
+                if (!v.contains('@')) return l10n.errorInvalidEmail;
+                return null;
+              },
+            ).animate().fadeIn(delay: 200.ms),
+            const SizedBox(height: 24),
+
+            PrimaryButton(
+              label: l10n.sendResetLink,
+              onPressed: _send,
+              isLoading: _loading,
+            ).animate().fadeIn(delay: 250.ms),
+            const SizedBox(height: 20),
+
+            Center(
+              child: TextButton(
+                onPressed: () => context.go(AppRoutes.login),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.arrow_back_ios_rounded, size: 14),
+                    const SizedBox(width: 4),
+                    Text(l10n.backToSignIn),
+                  ],
+                ),
+              ),
+            ).animate().fadeIn(delay: 300.ms),
+          ],
         ),
-        const SizedBox(height: 32),
-        TextFormField(
-          controller: _emailCtrl,
-          keyboardType: TextInputType.emailAddress,
-          decoration: InputDecoration(
-            labelText: l10n.email,
-            prefixIcon: const Icon(Icons.email_outlined),
-          ),
-        ),
-        const SizedBox(height: 24),
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton(
-            onPressed: _loading
-                ? null
-                : () async {
-                    setState(() => _loading = true);
-                    try {
-                      await ref
-                          .read(authServiceProvider)
-                          .sendPasswordReset(_emailCtrl.text.trim());
-                      setState(() { _sent = true; _loading = false; });
-                    } catch (e) {
-                      setState(() => _loading = false);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(e.toString())),
-                      );
-                    }
-                  },
-            child: _loading
-                ? const CircularProgressIndicator(color: Colors.white)
-                : Text(l10n.sendResetLink),
-          ),
-        ),
-      ],
+      ),
     );
   }
 
   Widget _buildSuccess(AppLocalizations l10n) {
-    return Center(
+    return SingleChildScrollView(
+      key: const ValueKey('success'),
+      padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
+          const SizedBox(height: 48),
+
+          // ── Animated icon ──
           Container(
-            width: 80,
-            height: 80,
+            width: 100,
+            height: 100,
+            decoration: BoxDecoration(
+              gradient: AppColors.primaryGradient,
+              borderRadius: BorderRadius.circular(28),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.primary.withOpacity(0.3),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: const Icon(Icons.mark_email_read_rounded,
+                size: 50, color: Colors.white),
+          )
+              .animate()
+              .scale(curve: Curves.elasticOut, duration: 700.ms)
+              .then()
+              .shimmer(duration: 1200.ms,
+                  color: Colors.white.withOpacity(0.4)),
+          const SizedBox(height: 32),
+
+          Text(l10n.checkYourEmail,
+              style: Theme.of(context).textTheme.headlineMedium
+                  ?.copyWith(fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center)
+              .animate().fadeIn(delay: 200.ms),
+          const SizedBox(height: 12),
+
+          Text(
+            l10n.resetLinkSentTo(_emailCtrl.text.trim()),
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodyLarge
+                ?.copyWith(color: context.textPrim),
+          ).animate().fadeIn(delay: 300.ms),
+          const SizedBox(height: 8),
+
+          Text(
+            'If you don\'t see it, check your spam folder.',
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodySmall
+                ?.copyWith(color: context.textHintColor),
+          ).animate().fadeIn(delay: 350.ms),
+          const SizedBox(height: 40),
+
+          // ── Info tile ──
+          Container(
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: context.primarySurf,
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(14),
             ),
-            child: const Icon(Icons.mark_email_read_outlined,
-                size: 40, color: AppColors.primary),
-          ).animate().scale(curve: Curves.elasticOut),
-          const SizedBox(height: 24),
-          Text(l10n.checkYourEmail,
-              style: Theme.of(context).textTheme.headlineSmall),
-          const SizedBox(height: 12),
-          Text(
-            l10n.resetLinkSentTo(_emailCtrl.text),
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodyLarge,
-          ),
+            child: Row(
+              children: [
+                const Icon(Icons.info_outline,
+                    color: AppColors.primary, size: 20),
+                const SizedBox(width: 12),
+                const Expanded(
+                  child: Text(
+                    'Click the link in the email to set a new password. '
+                    'The link expires in 1 hour.',
+                    style: TextStyle(fontSize: 13, color: AppColors.primaryDark),
+                  ),
+                ),
+              ],
+            ),
+          ).animate().fadeIn(delay: 400.ms),
           const SizedBox(height: 32),
-          OutlinedButton(
+
+          PrimaryButton(
+            label: l10n.backToSignIn,
             onPressed: () => context.go(AppRoutes.login),
-            child: Text(l10n.backToSignIn),
-          ),
+          ).animate().fadeIn(delay: 500.ms),
+          const SizedBox(height: 16),
+
+          // ── Resend ──
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(l10n.didntReceiveEmail,
+                  style: Theme.of(context).textTheme.bodyMedium),
+              TextButton(
+                onPressed: _loading ? null : _resend,
+                child: _loading
+                    ? const SizedBox(
+                        width: 16, height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Text(l10n.resend),
+              ),
+            ],
+          ).animate().fadeIn(delay: 600.ms),
+
+          if (_error != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 12),
+              child: Text(_error!,
+                  style: const TextStyle(color: AppColors.error, fontSize: 13),
+                  textAlign: TextAlign.center),
+            ).animate().fadeIn(),
         ],
       ),
     );

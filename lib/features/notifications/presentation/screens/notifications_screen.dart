@@ -4,19 +4,22 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/services/auth_service.dart';
 import '../../../../core/services/group_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/models/app_models.dart';
 import '../../../../shared/widgets/shared_widgets.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 
 // ── Provider ──
 // NOTE: We intentionally do NOT use orderBy('createdAt') here because that
 // requires a composite Firestore index (userId + createdAt).  Instead we
 // fetch all notifications for the user and sort them in Dart.
+//
+// We watch currentUserProvider (not FirebaseAuth.instance.currentUser) so
+// this provider re-evaluates automatically whenever the user signs in or out.
 final notificationsProvider = StreamProvider<List<AppNotification>>((ref) {
-  final userId = FirebaseAuth.instance.currentUser?.uid;
+  final userId = ref.watch(currentUserProvider).valueOrNull?.id;
   if (userId == null) return const Stream.empty();
 
   return FirebaseFirestore.instance
@@ -46,19 +49,28 @@ final unreadNotifCountProvider = Provider<int>((ref) {
 class NotificationsScreen extends ConsumerWidget {
   const NotificationsScreen({super.key});
 
-  Future<void> _markAllRead(List<AppNotification> notifs) async {
+  Future<void> _markAllRead(
+      BuildContext context, List<AppNotification> notifs) async {
     final unread = notifs.where((n) => !n.isRead).toList();
     if (unread.isEmpty) return;
-    final batch = FirebaseFirestore.instance.batch();
-    for (final n in unread) {
-      batch.update(
-        FirebaseFirestore.instance
-            .collection(AppConstants.notificationsCollection)
-            .doc(n.id),
-        {'isRead': true},
-      );
+    try {
+      final batch = FirebaseFirestore.instance.batch();
+      for (final n in unread) {
+        batch.update(
+          FirebaseFirestore.instance
+              .collection(AppConstants.notificationsCollection)
+              .doc(n.id),
+          {'isRead': true},
+        );
+      }
+      await batch.commit();
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to mark all read: $e')),
+        );
+      }
     }
-    await batch.commit();
   }
 
   @override
@@ -77,7 +89,8 @@ class NotificationsScreen extends ConsumerWidget {
             data: (notifs) {
               final hasUnread = notifs.any((n) => !n.isRead);
               return TextButton(
-                onPressed: hasUnread ? () => _markAllRead(notifs) : null,
+                onPressed:
+                    hasUnread ? () => _markAllRead(context, notifs) : null,
                 child: Text(
                   l10n.markAllRead,
                   style: TextStyle(
@@ -112,12 +125,34 @@ class NotificationsScreen extends ConsumerWidget {
   }
 }
 
-class _NotifTile extends ConsumerWidget {
+class _NotifTile extends ConsumerStatefulWidget {
   final AppNotification notif;
   const _NotifTile({required this.notif});
 
+  @override
+  ConsumerState<_NotifTile> createState() => _NotifTileState();
+}
+
+class _NotifTileState extends ConsumerState<_NotifTile> {
+  late bool _isRead;
+
+  @override
+  void initState() {
+    super.initState();
+    _isRead = widget.notif.isRead;
+  }
+
+  @override
+  void didUpdateWidget(_NotifTile oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // If Firestore confirms the read, sync state
+    if (oldWidget.notif.isRead != widget.notif.isRead) {
+      _isRead = widget.notif.isRead;
+    }
+  }
+
   IconData get _icon {
-    switch (notif.type) {
+    switch (widget.notif.type) {
       case 'join_request':
         return Icons.how_to_reg_rounded;
       case 'contribution':
@@ -134,7 +169,7 @@ class _NotifTile extends ConsumerWidget {
   }
 
   Color get _color {
-    switch (notif.type) {
+    switch (widget.notif.type) {
       case 'join_request':
         return AppColors.warning;
       case 'contribution':
@@ -151,26 +186,62 @@ class _NotifTile extends ConsumerWidget {
   }
 
   Future<void> _markRead() async {
-    if (notif.isRead) return;
-    await FirebaseFirestore.instance
-        .collection(AppConstants.notificationsCollection)
-        .doc(notif.id)
-        .update({'isRead': true});
+    if (_isRead) return;
+    // Optimistic UI
+    setState(() => _isRead = true);
+    try {
+      await FirebaseFirestore.instance
+          .collection(AppConstants.notificationsCollection)
+          .doc(widget.notif.id)
+          .update({'isRead': true});
+    } catch (e) {
+      // Revert optimistic update on error
+      if (mounted) setState(() => _isRead = false);
+    }
+  }
+
+  /// Returns true when this is a personal fine notification (not a group one).
+  bool get _isPersonalFine =>
+      widget.notif.type == 'fine' &&
+      widget.notif.title.startsWith('⚠️ You received a fine');
+
+  void _showPayFineSheet(BuildContext context) {
+    final fineId = widget.notif.actionId;
+    if (fineId == null) return;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: context.bg,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => PayFineSheet(fineId: fineId),
+    );
+  }
+
+  String _timeAgo(DateTime dt) {
+    final diff = DateTime.now().difference(dt);
+    if (diff.inMinutes < 1) return 'Just now';
+    if (diff.inHours < 1) return '${diff.inMinutes}m ago';
+    if (diff.inDays < 1) return '${diff.inHours}h ago';
+    if (diff.inDays < 7) return '${diff.inDays}d ago';
+    return DateFormat('d MMM').format(dt);
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final currentUserId = FirebaseAuth.instance.currentUser?.uid ?? '';
+  Widget build(BuildContext context) {
+    final currentUserId = ref.watch(currentUserProvider).valueOrNull?.id ?? '';
     return GestureDetector(
       onTap: _markRead,
       child: Container(
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: notif.isRead ? context.cardSurface : context.primarySurf,
+          color: _isRead ? context.cardSurface : context.primarySurf,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: notif.isRead
+            color: _isRead
                 ? context.borderColor
                 : AppColors.primary.withOpacity(0.3),
           ),
@@ -192,37 +263,50 @@ class _NotifTile extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(notif.title,
+                  Text(widget.notif.title,
                       style: Theme.of(context).textTheme.titleSmall),
                   const SizedBox(height: 4),
                   Text(
-                    notif.body,
+                    widget.notif.body,
                     style: Theme.of(context).textTheme.bodySmall,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 6),
-                  if (notif.createdAt != null)
+                  if (widget.notif.createdAt != null)
                     Text(
-                      _timeAgo(notif.createdAt!),
+                      _timeAgo(widget.notif.createdAt!),
                       style: Theme.of(context)
                           .textTheme
                           .labelSmall
                           ?.copyWith(color: context.textHintColor),
                     ),
+                  // "Pay Fine" chip for personal fine notifications
+                  if (_isPersonalFine && widget.notif.actionId != null) ...[
+                    const SizedBox(height: 8),
+                    ActionChip(
+                      label: const Text('Pay Fine'),
+                      avatar: const Icon(Icons.payment_rounded, size: 16),
+                      backgroundColor: AppColors.error.withOpacity(0.1),
+                      labelStyle: const TextStyle(
+                          color: AppColors.error, fontWeight: FontWeight.w600),
+                      side: const BorderSide(color: AppColors.error),
+                      onPressed: () => _showPayFineSheet(context),
+                    ),
+                  ],
                   // Emoji reactions for broadcast notifications
-                  if (notif.type == 'broadcast' &&
-                      notif.actionId != null) ...[
+                  if (widget.notif.type == 'broadcast' &&
+                      widget.notif.actionId != null) ...[
                     const SizedBox(height: 8),
                     _BroadcastReactionRow(
-                      broadcastId: notif.actionId!,
+                      broadcastId: widget.notif.actionId!,
                       currentUserId: currentUserId,
                     ),
                   ],
                 ],
               ),
             ),
-            if (!notif.isRead)
+            if (!_isRead)
               Container(
                 width: 8,
                 height: 8,
@@ -236,15 +320,6 @@ class _NotifTile extends ConsumerWidget {
         ),
       ),
     );
-  }
-
-  String _timeAgo(DateTime dt) {
-    final diff = DateTime.now().difference(dt);
-    if (diff.inMinutes < 1) return 'Just now';
-    if (diff.inHours < 1) return '${diff.inMinutes}m ago';
-    if (diff.inDays < 1) return '${diff.inHours}h ago';
-    if (diff.inDays < 7) return '${diff.inDays}d ago';
-    return DateFormat('d MMM').format(dt);
   }
 }
 

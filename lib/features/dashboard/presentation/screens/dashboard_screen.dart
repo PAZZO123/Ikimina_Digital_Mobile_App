@@ -241,8 +241,11 @@ class _DashboardContent extends ConsumerWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(l10n.groupBalanceOverview,
-                  style: Theme.of(context).textTheme.titleMedium),
+              Expanded(
+                child: Text(l10n.groupBalanceOverview,
+                    style: Theme.of(context).textTheme.titleMedium,
+                    overflow: TextOverflow.ellipsis),
+              ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(

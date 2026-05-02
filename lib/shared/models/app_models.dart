@@ -415,6 +415,75 @@ class ContributionRequest {
       };
 }
 
+// ─────────────────────── FINE PAYMENT REQUEST MODEL ──────────────────────
+// Member submits a fine payment; admin confirms before fine is marked paid.
+
+class FinePaymentRequest {
+  final String id;
+  final String fineId;
+  final String groupId;
+  final String groupName;
+  final String memberId;
+  final String memberName;
+  final double amount;
+  final String reason;
+  final String status; // pending | confirmed | rejected
+  final DateTime? createdAt;
+  final String? confirmedBy;
+  final DateTime? confirmedAt;
+
+  const FinePaymentRequest({
+    required this.id,
+    required this.fineId,
+    required this.groupId,
+    required this.groupName,
+    required this.memberId,
+    required this.memberName,
+    required this.amount,
+    required this.reason,
+    this.status = 'pending',
+    this.createdAt,
+    this.confirmedBy,
+    this.confirmedAt,
+  });
+
+  factory FinePaymentRequest.fromFirestore(DocumentSnapshot doc) {
+    final data = _fromFirestore(doc.data() as Map<String, dynamic>);
+    return FinePaymentRequest(
+      id: doc.id,
+      fineId: data['fineId'] as String? ?? '',
+      groupId: data['groupId'] as String? ?? '',
+      groupName: data['groupName'] as String? ?? '',
+      memberId: data['memberId'] as String? ?? '',
+      memberName: data['memberName'] as String? ?? '',
+      amount: (data['amount'] as num?)?.toDouble() ?? 0.0,
+      reason: data['reason'] as String? ?? '',
+      status: data['status'] as String? ?? 'pending',
+      createdAt: data['createdAt'] != null
+          ? DateTime.tryParse(data['createdAt'] as String)
+          : null,
+      confirmedBy: data['confirmedBy'] as String?,
+      confirmedAt: data['confirmedAt'] != null
+          ? DateTime.tryParse(data['confirmedAt'] as String)
+          : null,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'fineId': fineId,
+        'groupId': groupId,
+        'groupName': groupName,
+        'memberId': memberId,
+        'memberName': memberName,
+        'amount': amount,
+        'reason': reason,
+        'status': status,
+        'createdAt': createdAt?.toIso8601String(),
+        'confirmedBy': confirmedBy,
+        'confirmedAt': confirmedAt?.toIso8601String(),
+      };
+}
+
 // ─────────────────────── REPAYMENT REQUEST MODEL ─────────────────────────
 // Member submits a loan repayment; admin approves before loan balance updates.
 

@@ -12,7 +12,20 @@
           "package_name": "com.ikimina.digital"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "1038490095433-cnv5687lu4k82sgghovl9upn9nimbl50.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.ikimina.digital",
+            "certificate_hash": "3db110acf8b180082dfc4d970d45fab04639a49a"
+          }
+        },
+        {
+          "client_id": "1038490095433-k97icfejj094fd4nk4ba0jou68ovngeb.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyBaKYbbrbMWEKI8MYp63DN4jAEiqjZ4fio"
@@ -20,7 +33,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1038490095433-k97icfejj094fd4nk4ba0jou68ovngeb.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1038490095433-l8ur3f9uccaekbd5unsirl4bm4o9tpoe.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.ikimina.app"
+              }
+            }
+          ]
         }
       }
     }
