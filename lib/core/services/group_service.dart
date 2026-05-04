@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../shared/models/app_models.dart';
 import '../constants/app_constants.dart';
 import 'auth_service.dart';
+import 'notification_service.dart';
 
 final groupServiceProvider = Provider<GroupService>((ref) {
   return GroupService(ref.read(authServiceProvider));
@@ -745,6 +746,7 @@ class GroupService {
     try {
       final docRef =
           _db.collection(AppConstants.notificationsCollection).doc();
+      // Firestore in-app notification
       await docRef.set({
         'id': docRef.id,
         'userId': userId,
@@ -756,6 +758,14 @@ class GroupService {
         'actionId': actionId,
         'createdAt': Timestamp.now(),
       });
+      // Real FCM push — works without Cloud Functions or Blaze plan
+      await NotificationService.pushToUser(
+        userId: userId,
+        title: title,
+        body: body,
+        type: type,
+        groupId: groupId,
+      );
     } catch (_) {
       // Non-fatal: never let a notification error break the main action
     }
@@ -778,7 +788,7 @@ class GroupService {
           .toList();
       if (targets.isEmpty) return;
 
-      // Use a batch write — max 500 ops, groups have max 50 members
+      // Use a batch write for Firestore — max 500 ops, groups have max 50 members
       final batch = _db.batch();
       for (final userId in targets) {
         final docRef =
@@ -795,7 +805,19 @@ class GroupService {
           'createdAt': Timestamp.now(),
         });
       }
-      await batch.commit();
+      // Firestore batch + FCM pushes to all members run concurrently
+      await Future.wait([
+        batch.commit(),
+        ...targets.map(
+          (userId) => NotificationService.pushToUser(
+            userId: userId,
+            title: title,
+            body: body,
+            type: type,
+            groupId: groupId,
+          ),
+        ),
+      ]);
     } catch (_) {
       // Non-fatal
     }
@@ -953,17 +975,14 @@ class GroupService {
 
     await batch.commit();
 
-    await _db.collection(AppConstants.notificationsCollection).add({
-      'userId': req.memberId,
-      'title': 'Contribution Approved ✅',
-      'body':
-          'Your contribution of ${_formatAmount(req.amount)} to ${req.groupName} was approved by $adminName.',
-      'type': 'contribution',
-      'isRead': false,
-      'groupId': req.groupId,
-      'actionId': contribRef.id,
-      'createdAt': Timestamp.now(),
-    });
+    await _sendNotification(
+      userId: req.memberId,
+      title: 'Contribution Approved ✅',
+      body: 'Your contribution of ${_formatAmount(req.amount)} to ${req.groupName} was approved by $adminName.',
+      type: 'contribution_approved',
+      groupId: req.groupId,
+      actionId: contribRef.id,
+    );
   }
 
   /// Admin rejects a contribution request.
@@ -985,17 +1004,14 @@ class GroupService {
       'reviewedBy': adminId,
     });
 
-    await _db.collection(AppConstants.notificationsCollection).add({
-      'userId': req.memberId,
-      'title': 'Contribution Not Approved',
-      'body':
-          'Your contribution of ${_formatAmount(req.amount)} to ${req.groupName} was not approved. ${reason ?? ''}',
-      'type': 'contribution',
-      'isRead': false,
-      'groupId': req.groupId,
-      'actionId': requestId,
-      'createdAt': Timestamp.now(),
-    });
+    await _sendNotification(
+      userId: req.memberId,
+      title: 'Contribution Not Approved ❌',
+      body: 'Your contribution of ${_formatAmount(req.amount)} to ${req.groupName} was not approved. ${reason ?? ''}',
+      type: 'contribution_rejected',
+      groupId: req.groupId,
+      actionId: requestId,
+    );
   }
 
   // ─── Repayment Requests ──────────────────────────────────────────────────
@@ -1109,18 +1125,16 @@ class GroupService {
 
     await batch.commit();
 
-    await _db.collection(AppConstants.notificationsCollection).add({
-      'userId': req.memberId,
-      'title': isFullyRepaid ? 'Loan Fully Repaid 🎉' : 'Repayment Approved ✅',
-      'body': isFullyRepaid
+    await _sendNotification(
+      userId: req.memberId,
+      title: isFullyRepaid ? 'Loan Fully Repaid 🎉' : 'Repayment Approved ✅',
+      body: isFullyRepaid
           ? 'Your loan is now fully repaid! ${_formatAmount(req.amount)} confirmed by $adminName.'
           : 'Your repayment of ${_formatAmount(req.amount)} was approved by $adminName.',
-      'type': 'loan',
-      'isRead': false,
-      'groupId': req.groupId,
-      'actionId': req.loanId,
-      'createdAt': Timestamp.now(),
-    });
+      type: 'loan_repayment',
+      groupId: req.groupId,
+      actionId: req.loanId,
+    );
   }
 
   /// Admin rejects a repayment request.
@@ -1141,17 +1155,14 @@ class GroupService {
       'reviewedBy': adminId,
     });
 
-    await _db.collection(AppConstants.notificationsCollection).add({
-      'userId': req.memberId,
-      'title': 'Repayment Not Approved',
-      'body':
-          'Your repayment of ${_formatAmount(req.amount)} was not approved. ${reason ?? ''}',
-      'type': 'loan',
-      'isRead': false,
-      'groupId': req.groupId,
-      'actionId': requestId,
-      'createdAt': Timestamp.now(),
-    });
+    await _sendNotification(
+      userId: req.memberId,
+      title: 'Repayment Not Approved ❌',
+      body: 'Your repayment of ${_formatAmount(req.amount)} was not approved. ${reason ?? ''}',
+      type: 'loan_rejected',
+      groupId: req.groupId,
+      actionId: requestId,
+    );
   }
 
   // ─── Group Broadcasts ────────────────────────────────────────────────────

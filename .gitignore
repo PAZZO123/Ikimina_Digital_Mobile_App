@@ -1,6 +1,9 @@
 # Claude AI working directory
 .claude/
 
+# Service account key — NEVER commit this (contains private RSA key)
+lib/core/constants/fcm_service_account.dart
+
 # Flutter/Dart
 .dart_tool/
 .flutter-plugins
