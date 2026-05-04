@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -6,6 +8,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'core/services/auth_service.dart';
+import 'core/services/notification_service.dart';
 import 'core/theme/app_theme.dart';
 import 'core/utils/router.dart';
 import 'firebase_options.dart';
@@ -68,11 +71,34 @@ Future<void> main() async {
   );
 }
 
-class IkiminaApp extends ConsumerWidget {
+class IkiminaApp extends ConsumerStatefulWidget {
   const IkiminaApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<IkiminaApp> createState() => _IkiminaAppState();
+}
+
+class _IkiminaAppState extends ConsumerState<IkiminaApp> {
+  StreamSubscription<String>? _navSub;
+
+  @override
+  void initState() {
+    super.initState();
+    // Forward notification-tap routes to GoRouter
+    _navSub = NotificationService.navigationStream.stream.listen((route) {
+      final router = ref.read(routerProvider);
+      router.go(route);
+    });
+  }
+
+  @override
+  void dispose() {
+    _navSub?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final router = ref.watch(routerProvider);
 
     // Restore locale and theme from user's saved preferences

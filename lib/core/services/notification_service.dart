@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -7,6 +9,10 @@ import '../../shared/models/app_models.dart';
 class NotificationService {
   static final _fcm = FirebaseMessaging.instance;
   static final _localNotifications = FlutterLocalNotificationsPlugin();
+
+  /// Emits a GoRouter path whenever the user taps a notification.
+  /// Listen to this from [IkiminaApp] and call `router.go(route)`.
+  static final navigationStream = StreamController<String>.broadcast();
 
   static const _channelId = 'ikimina_notifications';
   static const _channelName = 'Ikimina Notifications';
@@ -57,9 +63,38 @@ class NotificationService {
 
   static Future<String?> getToken() => _fcm.getToken();
 
+  /// Build a GoRouter path from the FCM data payload.
+  ///
+  /// Priority:
+  ///   1. explicit `route` key (set by the Cloud Function if desired)
+  ///   2. derive from `type` + `groupId` / `loanId` fields
+  ///   3. fall back to /notifications
+  static String _routeFromData(Map<String, dynamic> data) {
+    if (data['route'] case final String r when r.isNotEmpty) return r;
+
+    final type = data['type'] ?? '';
+    final groupId = data['groupId'] ?? '';
+    final loanId = data['loanId'] ?? '';
+
+    if (loanId.isNotEmpty &&
+        (type == 'loan_approved' ||
+            type == 'loan_rejected' ||
+            type == 'loan_repayment')) {
+      return '/loans/$loanId';
+    }
+
+    if (groupId.isNotEmpty) {
+      return '/groups/$groupId';
+    }
+
+    return AppRoutes.notifications;
+  }
+
   static Future<void> _handleForegroundMessage(RemoteMessage message) async {
     final notification = message.notification;
     if (notification == null) return;
+
+    final route = _routeFromData(message.data);
 
     await _localNotifications.show(
       notification.hashCode,
@@ -80,35 +115,38 @@ class NotificationService {
           presentSound: true,
         ),
       ),
-      payload: message.data['route'],
+      payload: route,
     );
 
-    // Save to Firestore
-    final userId = message.data['userId'];
-    if (userId != null) {
-      await _saveNotification(
-        userId: userId,
-        title: notification.title ?? '',
-        body: notification.body ?? '',
-        type: message.data['type'] ?? 'general',
-        groupId: message.data['groupId'],
-        actionId: message.data['actionId'],
-      );
+    // Save to Firestore only if the Cloud Function hasn't already done it.
+    // The Cloud Function writes the notification document, which triggers FCM.
+    // The app saves a local copy when it receives the push — skip to avoid
+    // duplicates; only save if the notification arrived without a notifId.
+    final hasCloudNotif = message.data['notifId']?.isNotEmpty ?? false;
+    if (!hasCloudNotif) {
+      final userId = message.data['userId'];
+      if (userId != null) {
+        await _saveNotification(
+          userId: userId,
+          title: notification.title ?? '',
+          body: notification.body ?? '',
+          type: message.data['type'] ?? 'general',
+          groupId: message.data['groupId'],
+          actionId: message.data['actionId'],
+        );
+      }
     }
   }
 
   static void _handleNotificationOpened(RemoteMessage message) {
-    // Navigate based on data
-    final route = message.data['route'];
-    if (route != null) {
-      // Use GoRouter to navigate — handled by main app
-    }
+    final route = _routeFromData(message.data);
+    navigationStream.add(route);
   }
 
   static void _onNotificationTapped(NotificationResponse response) {
     final route = response.payload;
-    if (route != null) {
-      // Navigate to route
+    if (route != null && route.isNotEmpty) {
+      navigationStream.add(route);
     }
   }
 
