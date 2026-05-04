@@ -69,6 +69,8 @@ _$GroupModelImpl _$$GroupModelImplFromJson(Map<String, dynamic> json) =>
       totalBalance: (json['totalBalance'] as num?)?.toDouble() ?? 0.0,
       totalContributed: (json['totalContributed'] as num?)?.toDouble() ?? 0.0,
       totalLoaned: (json['totalLoaned'] as num?)?.toDouble() ?? 0.0,
+      groupProfitBalance:
+          (json['groupProfitBalance'] as num?)?.toDouble() ?? 0.0,
       status: json['status'] as String? ?? 'active',
       groupImageUrl: json['groupImageUrl'] as String?,
       inviteCode: json['inviteCode'] as String?,
@@ -108,6 +110,7 @@ Map<String, dynamic> _$$GroupModelImplToJson(_$GroupModelImpl instance) =>
       'totalBalance': instance.totalBalance,
       'totalContributed': instance.totalContributed,
       'totalLoaned': instance.totalLoaned,
+      'groupProfitBalance': instance.groupProfitBalance,
       'status': instance.status,
       'groupImageUrl': instance.groupImageUrl,
       'inviteCode': instance.inviteCode,

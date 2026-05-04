@@ -585,12 +585,24 @@ class GroupService {
       updates['fullyRepaidAt'] = Timestamp.now();
     }
 
+    final interestEarned = isFullyRepaid
+        ? (loan.totalDue - loan.amount).clamp(0.0, double.infinity)
+        : 0.0;
+
     final batch = _db.batch();
     batch.update(
         _db.collection(AppConstants.loansCollection).doc(loanId), updates);
     batch.update(
       _db.collection(AppConstants.groupsCollection).doc(loan.groupId),
-      {'totalBalance': FieldValue.increment(repaymentAmount)},
+      {
+        'totalBalance': FieldValue.increment(repaymentAmount),
+        // When fully repaid: clear the outstanding loan from totalLoaned
+        if (isFullyRepaid)
+          'totalLoaned': FieldValue.increment(-loan.amount),
+        // Interest earned goes to the group profit pool
+        if (isFullyRepaid && interestEarned > 0)
+          'groupProfitBalance': FieldValue.increment(interestEarned),
+      },
     );
     await batch.commit();
   }
@@ -1080,10 +1092,19 @@ class GroupService {
     });
 
     // Returned repayment goes back into group balance
+    final interestEarned = isFullyRepaid
+        ? (totalDue - principal).clamp(0.0, double.infinity)
+        : 0.0;
     final groupRef =
         _db.collection(AppConstants.groupsCollection).doc(req.groupId);
     batch.update(groupRef, {
       'totalBalance': FieldValue.increment(req.amount),
+      // When fully repaid: clear the outstanding loan from totalLoaned
+      if (isFullyRepaid)
+        'totalLoaned': FieldValue.increment(-principal),
+      // Interest earned goes to the group profit pool
+      if (isFullyRepaid && interestEarned > 0)
+        'groupProfitBalance': FieldValue.increment(interestEarned),
     });
 
     await batch.commit();
@@ -1216,10 +1237,29 @@ class GroupService {
 
   // ─── Mark Fine Paid ───
   Future<void> markFinePaid(String fineId) async {
-    await _db.collection(AppConstants.finesCollection).doc(fineId).update({
-      'status': 'paid',
-      'paidAt': Timestamp.now(),
-    });
+    // Read fine to get amount + groupId so we can credit the group
+    final fineSnap =
+        await _db.collection(AppConstants.finesCollection).doc(fineId).get();
+    final fineData = fineSnap.data() as Map<String, dynamic>? ?? {};
+    final fineAmount = (fineData['amount'] as num?)?.toDouble() ?? 0.0;
+    final groupId = fineData['groupId'] as String? ?? '';
+
+    final batch = _db.batch();
+    batch.update(
+      _db.collection(AppConstants.finesCollection).doc(fineId),
+      {'status': 'paid', 'paidAt': Timestamp.now()},
+    );
+    if (groupId.isNotEmpty && fineAmount > 0) {
+      // Fine money enters the group: increases balance + profit pool
+      batch.update(
+        _db.collection(AppConstants.groupsCollection).doc(groupId),
+        {
+          'totalBalance': FieldValue.increment(fineAmount),
+          'groupProfitBalance': FieldValue.increment(fineAmount),
+        },
+      );
+    }
+    await batch.commit();
   }
 
   // ─── Stream Member Fines ──────────────────────────────────────────────────
@@ -1322,6 +1362,15 @@ class GroupService {
         'status': 'paid',
         'paidAt': Timestamp.now(),
         'confirmedBy': adminId,
+      },
+    );
+
+    // Fine money enters the group: increases total balance + profit pool
+    batch.update(
+      _db.collection(AppConstants.groupsCollection).doc(req.groupId),
+      {
+        'totalBalance': FieldValue.increment(req.amount),
+        'groupProfitBalance': FieldValue.increment(req.amount),
       },
     );
 

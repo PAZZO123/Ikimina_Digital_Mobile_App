@@ -65,6 +65,7 @@ class GroupModel with _$GroupModel {
     @Default(0.0) double totalBalance,
     @Default(0.0) double totalContributed,
     @Default(0.0) double totalLoaned,
+    @Default(0.0) double groupProfitBalance, // fines collected + loan interest earned
     @Default('active') String status,
     String? groupImageUrl,
     String? inviteCode,

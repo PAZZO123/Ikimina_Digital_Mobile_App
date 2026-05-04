@@ -2006,6 +2006,15 @@ class _PayoutsTab extends ConsumerWidget {
 
     final totalContributed = group.totalContributed;
 
+    final memberCount = group.memberIds.length;
+    final profitPool = group.groupProfitBalance;
+    // Each member gets an EQUAL share of the group profit pool (fines + interest)
+    // Their contribution share is returned in full (minus outstanding loans)
+    final profitPerMember = memberCount > 0 ? profitPool / memberCount : 0.0;
+    // Available contributions = totalContributed minus what is currently loaned out
+    final availableContributions =
+        (group.totalContributed - group.totalLoaned).clamp(0.0, double.infinity);
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -2023,8 +2032,8 @@ class _PayoutsTab extends ConsumerWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            'Members save and can borrow. At maturity each member '
-            'receives their contributed share plus profit from loans.',
+            'Each member receives their full contributions back plus an equal '
+            'share of group profits (loan interest + fines collected).',
             style: Theme.of(context)
                 .textTheme
                 .bodySmall
@@ -2039,37 +2048,102 @@ class _PayoutsTab extends ConsumerWidget {
               gradient: AppColors.primaryGradient,
               borderRadius: BorderRadius.circular(16),
             ),
-            child: Row(
+            child: Column(
               children: [
-                Expanded(
-                  child: _SavingsStat(
-                    label: 'Total Saved',
-                    value: formatRWF(group.totalContributed),
-                    light: true,
-                  ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _SavingsStat(
+                        label: 'Total Saved',
+                        value: formatRWF(group.totalContributed),
+                        light: true,
+                      ),
+                    ),
+                    Container(
+                        width: 1,
+                        height: 40,
+                        color: Colors.white.withOpacity(0.3)),
+                    Expanded(
+                      child: _SavingsStat(
+                        label: 'Available Balance',
+                        value: formatRWF(group.totalBalance),
+                        light: true,
+                      ),
+                    ),
+                    Container(
+                        width: 1,
+                        height: 40,
+                        color: Colors.white.withOpacity(0.3)),
+                    Expanded(
+                      child: _SavingsStat(
+                        label: 'Loaned Out',
+                        value: formatRWF(group.totalLoaned),
+                        light: true,
+                      ),
+                    ),
+                  ],
                 ),
-                Container(
-                    width: 1,
-                    height: 40,
-                    color: Colors.white.withOpacity(0.3)),
-                Expanded(
-                  child: _SavingsStat(
-                    label: 'Available Balance',
-                    value: formatRWF(group.totalBalance),
-                    light: true,
-                  ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          // ── Group Profit Pool card ───────────────────────────────────────
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.success.withOpacity(0.08),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: AppColors.success.withOpacity(0.3)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.trending_up_rounded,
+                        color: AppColors.success, size: 18),
+                    const SizedBox(width: 8),
+                    Text('Group Profit Pool',
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                            color: AppColors.success)),
+                    const Spacer(),
+                    Text(
+                      formatRWF(profitPool),
+                      style: const TextStyle(
+                          color: AppColors.success,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 15),
+                    ),
+                  ],
                 ),
-                Container(
-                    width: 1,
-                    height: 40,
-                    color: Colors.white.withOpacity(0.3)),
-                Expanded(
-                  child: _SavingsStat(
-                    label: 'Loaned Out',
-                    value: formatRWF(group.totalLoaned),
-                    light: true,
-                  ),
+                const SizedBox(height: 6),
+                Text(
+                  'Earned from loan interest and fines collected. '
+                  'Split equally among all ${memberCount} members.',
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodySmall
+                      ?.copyWith(color: context.textHintColor),
                 ),
+                if (memberCount > 0 && profitPool > 0) ...[
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: AppColors.success.withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      'Each member\'s profit share: ${formatRWF(profitPerMember)}',
+                      style: const TextStyle(
+                          color: AppColors.success,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
@@ -2090,18 +2164,17 @@ class _PayoutsTab extends ConsumerWidget {
             ...group.memberIds.map((memberId) {
               final name = nameMap[memberId] ?? 'Member';
               final contributed = memberTotals[memberId] ?? 0.0;
-              // Each member's share of the current balance, proportional to
-              // their contributions vs the group total.
+              // Each member's proportional share of available contributions
               final shareRatio = totalContributed > 0
                   ? contributed / totalContributed
-                  : (group.memberIds.isEmpty
-                      ? 0.0
-                      : 1.0 / group.memberIds.length);
-              final estimatedShare = group.totalBalance * shareRatio;
+                  : (memberCount == 0 ? 0.0 : 1.0 / memberCount);
+              // Contribution share: proportional to what they put in
+              final contributionShare = availableContributions * shareRatio;
+              // Total estimated payout = contribution share + equal profit share
+              final estimatedShare = contributionShare + profitPerMember;
 
               // Show fine balance for current user or all members if admin
-              final showFineBalance =
-                  isAdmin || memberId == currentUserId;
+              final showFineBalance = isAdmin || memberId == currentUserId;
 
               return _MemberSavingsTile(
                 memberId: memberId,
@@ -2110,6 +2183,7 @@ class _PayoutsTab extends ConsumerWidget {
                 contributed: contributed,
                 shareRatio: shareRatio,
                 estimatedShare: estimatedShare,
+                profitShare: profitPerMember,
                 isAdmin: group.adminId == memberId,
                 showFineBalance: showFineBalance,
               );
@@ -2132,9 +2206,9 @@ class _PayoutsTab extends ConsumerWidget {
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    'Estimated share is proportional to each member\'s '
-                    'contributions relative to the group total. Actual payouts '
-                    'include profit earned from loan interest.',
+                    'Your contribution share is returned in full at maturity. '
+                    'Group profits (loan interest + fines) are split equally '
+                    'among all members regardless of contribution size.',
                     style: Theme.of(context)
                         .textTheme
                         .bodySmall
@@ -2258,12 +2332,13 @@ class _SavingsStat extends StatelessWidget {
   final String label;
   final String value;
   final bool light;
+  final Color? valueColor;
   const _SavingsStat(
-      {required this.label, required this.value, this.light = false});
+      {required this.label, required this.value, this.light = false, this.valueColor});
 
   @override
   Widget build(BuildContext context) {
-    final textColor = light ? Colors.white : context.textPrim;
+    final textColor = valueColor ?? (light ? Colors.white : context.textPrim);
     final labelColor = light ? Colors.white70 : context.textHintColor;
     return Column(
       children: [
@@ -2290,6 +2365,7 @@ class _MemberSavingsTile extends ConsumerWidget {
   final double contributed;
   final double shareRatio;
   final double estimatedShare;
+  final double profitShare;
   final bool isAdmin;
   final bool showFineBalance;
 
@@ -2300,6 +2376,7 @@ class _MemberSavingsTile extends ConsumerWidget {
     required this.contributed,
     required this.shareRatio,
     required this.estimatedShare,
+    required this.profitShare,
     required this.isAdmin,
     this.showFineBalance = false,
   });
@@ -2394,10 +2471,19 @@ class _MemberSavingsTile extends ConsumerWidget {
                   value: formatRWF(contributed),
                 ),
               ),
+              if (profitShare > 0)
+                Expanded(
+                  child: _SavingsStat(
+                    label: 'Profit Share',
+                    value: '+${formatRWF(profitShare)}',
+                    valueColor: AppColors.success,
+                  ),
+                ),
               Expanded(
                 child: _SavingsStat(
-                  label: 'Est. Share',
+                  label: 'Est. Payout',
                   value: formatRWF(estimatedShare),
+                  valueColor: AppColors.primary,
                 ),
               ),
               if (showFineBalance)

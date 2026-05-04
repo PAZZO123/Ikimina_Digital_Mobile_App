@@ -482,6 +482,8 @@ mixin _$GroupModel {
   double get totalBalance => throw _privateConstructorUsedError;
   double get totalContributed => throw _privateConstructorUsedError;
   double get totalLoaned => throw _privateConstructorUsedError;
+  double get groupProfitBalance =>
+      throw _privateConstructorUsedError; // fines collected + loan interest earned
   String get status => throw _privateConstructorUsedError;
   String? get groupImageUrl => throw _privateConstructorUsedError;
   String? get inviteCode => throw _privateConstructorUsedError;
@@ -536,6 +538,7 @@ abstract class $GroupModelCopyWith<$Res> {
       double totalBalance,
       double totalContributed,
       double totalLoaned,
+      double groupProfitBalance,
       String status,
       String? groupImageUrl,
       String? inviteCode,
@@ -579,6 +582,7 @@ class _$GroupModelCopyWithImpl<$Res, $Val extends GroupModel>
     Object? totalBalance = null,
     Object? totalContributed = null,
     Object? totalLoaned = null,
+    Object? groupProfitBalance = null,
     Object? status = null,
     Object? groupImageUrl = freezed,
     Object? inviteCode = freezed,
@@ -642,6 +646,10 @@ class _$GroupModelCopyWithImpl<$Res, $Val extends GroupModel>
       totalLoaned: null == totalLoaned
           ? _value.totalLoaned
           : totalLoaned // ignore: cast_nullable_to_non_nullable
+              as double,
+      groupProfitBalance: null == groupProfitBalance
+          ? _value.groupProfitBalance
+          : groupProfitBalance // ignore: cast_nullable_to_non_nullable
               as double,
       status: null == status
           ? _value.status
@@ -724,6 +732,7 @@ abstract class _$$GroupModelImplCopyWith<$Res>
       double totalBalance,
       double totalContributed,
       double totalLoaned,
+      double groupProfitBalance,
       String status,
       String? groupImageUrl,
       String? inviteCode,
@@ -765,6 +774,7 @@ class __$$GroupModelImplCopyWithImpl<$Res>
     Object? totalBalance = null,
     Object? totalContributed = null,
     Object? totalLoaned = null,
+    Object? groupProfitBalance = null,
     Object? status = null,
     Object? groupImageUrl = freezed,
     Object? inviteCode = freezed,
@@ -828,6 +838,10 @@ class __$$GroupModelImplCopyWithImpl<$Res>
       totalLoaned: null == totalLoaned
           ? _value.totalLoaned
           : totalLoaned // ignore: cast_nullable_to_non_nullable
+              as double,
+      groupProfitBalance: null == groupProfitBalance
+          ? _value.groupProfitBalance
+          : groupProfitBalance // ignore: cast_nullable_to_non_nullable
               as double,
       status: null == status
           ? _value.status
@@ -905,6 +919,7 @@ class _$GroupModelImpl implements _GroupModel {
       this.totalBalance = 0.0,
       this.totalContributed = 0.0,
       this.totalLoaned = 0.0,
+      this.groupProfitBalance = 0.0,
       this.status = 'active',
       this.groupImageUrl,
       this.inviteCode,
@@ -969,6 +984,10 @@ class _$GroupModelImpl implements _GroupModel {
   final double totalLoaned;
   @override
   @JsonKey()
+  final double groupProfitBalance;
+// fines collected + loan interest earned
+  @override
+  @JsonKey()
   final String status;
   @override
   final String? groupImageUrl;
@@ -1017,7 +1036,7 @@ class _$GroupModelImpl implements _GroupModel {
 
   @override
   String toString() {
-    return 'GroupModel(id: $id, name: $name, adminId: $adminId, contributionAmount: $contributionAmount, contributionFrequency: $contributionFrequency, description: $description, memberIds: $memberIds, payoutOrder: $payoutOrder, currentPayoutIndex: $currentPayoutIndex, totalBalance: $totalBalance, totalContributed: $totalContributed, totalLoaned: $totalLoaned, status: $status, groupImageUrl: $groupImageUrl, inviteCode: $inviteCode, startDate: $startDate, nextContributionDate: $nextContributionDate, createdAt: $createdAt, defaultInterestRate: $defaultInterestRate, maxRepaymentMonths: $maxRepaymentMonths, loanPenaltyRate: $loanPenaltyRate, loanPenaltyGraceDays: $loanPenaltyGraceDays, maxLoanMultiplier: $maxLoanMultiplier, minContributionsForLoan: $minContributionsForLoan, lateFineAmount: $lateFineAmount, fineGraceDays: $fineGraceDays)';
+    return 'GroupModel(id: $id, name: $name, adminId: $adminId, contributionAmount: $contributionAmount, contributionFrequency: $contributionFrequency, description: $description, memberIds: $memberIds, payoutOrder: $payoutOrder, currentPayoutIndex: $currentPayoutIndex, totalBalance: $totalBalance, totalContributed: $totalContributed, totalLoaned: $totalLoaned, groupProfitBalance: $groupProfitBalance, status: $status, groupImageUrl: $groupImageUrl, inviteCode: $inviteCode, startDate: $startDate, nextContributionDate: $nextContributionDate, createdAt: $createdAt, defaultInterestRate: $defaultInterestRate, maxRepaymentMonths: $maxRepaymentMonths, loanPenaltyRate: $loanPenaltyRate, loanPenaltyGraceDays: $loanPenaltyGraceDays, maxLoanMultiplier: $maxLoanMultiplier, minContributionsForLoan: $minContributionsForLoan, lateFineAmount: $lateFineAmount, fineGraceDays: $fineGraceDays)';
   }
 
   @override
@@ -1046,6 +1065,8 @@ class _$GroupModelImpl implements _GroupModel {
                 other.totalContributed == totalContributed) &&
             (identical(other.totalLoaned, totalLoaned) ||
                 other.totalLoaned == totalLoaned) &&
+            (identical(other.groupProfitBalance, groupProfitBalance) ||
+                other.groupProfitBalance == groupProfitBalance) &&
             (identical(other.status, status) || other.status == status) &&
             (identical(other.groupImageUrl, groupImageUrl) ||
                 other.groupImageUrl == groupImageUrl) &&
@@ -1092,6 +1113,7 @@ class _$GroupModelImpl implements _GroupModel {
         totalBalance,
         totalContributed,
         totalLoaned,
+        groupProfitBalance,
         status,
         groupImageUrl,
         inviteCode,
@@ -1138,6 +1160,7 @@ abstract class _GroupModel implements GroupModel {
       final double totalBalance,
       final double totalContributed,
       final double totalLoaned,
+      final double groupProfitBalance,
       final String status,
       final String? groupImageUrl,
       final String? inviteCode,
@@ -1180,6 +1203,8 @@ abstract class _GroupModel implements GroupModel {
   double get totalContributed;
   @override
   double get totalLoaned;
+  @override
+  double get groupProfitBalance; // fines collected + loan interest earned
   @override
   String get status;
   @override
