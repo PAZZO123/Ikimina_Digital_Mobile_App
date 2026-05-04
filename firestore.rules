@@ -47,7 +47,9 @@ service cloud.firestore {
 
     // ─── Contributions ───
     match /contributions/{contributionId} {
-      allow read: if isGroupMember(resource.data.groupId);
+      // Owner can always read their own contributions (enables memberId-filtered queries).
+      // Group members can also read all contributions for their group.
+      allow read: if isOwner(resource.data.memberId) || isGroupMember(resource.data.groupId);
       allow create: if isGroupAdmin(request.resource.data.groupId);
       allow update: if isGroupAdmin(resource.data.groupId);
       allow delete: if isGroupAdmin(resource.data.groupId);
@@ -55,7 +57,7 @@ service cloud.firestore {
 
     // ─── Loans ───
     match /loans/{loanId} {
-      allow read: if isGroupMember(resource.data.groupId);
+      allow read: if isOwner(resource.data.borrowerId) || isGroupMember(resource.data.groupId);
       allow create: if isGroupMember(request.resource.data.groupId) &&
         request.auth.uid == request.resource.data.borrowerId;
       allow update: if isGroupAdmin(resource.data.groupId) ||
