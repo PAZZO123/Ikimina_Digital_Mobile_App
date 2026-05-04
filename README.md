@@ -123,7 +123,7 @@ lib/
 
 ### Step 1 — Clone and install dependencies
 
-## 🚀 How to Clone & Run This Project
+#### How to Clone & Run This Project
 
 Follow these steps carefully to set up and run the **Ikimina Digital** application locally.
 
@@ -132,7 +132,7 @@ Follow these steps carefully to set up and run the **Ikimina Digital** applicati
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/ikimina_digital.git
+git clone https://github.com/PAZZO123/ikimina_digital_Mobile_App.git
 cd ikimina_digital
 
 ```bash
