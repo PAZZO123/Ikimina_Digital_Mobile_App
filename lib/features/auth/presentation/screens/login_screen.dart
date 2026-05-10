@@ -38,12 +38,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     try {
       final user = await ref.read(authServiceProvider).signInWithGoogle();
       if (user == null) {
-        // User cancelled the Google account picker
         if (mounted) setState(() => _googleLoading = false);
         return;
       }
-      invalidateAllUserDataProviders(ref);
-      if (mounted) context.go(AppRoutes.home);
+      await _resetAndNavigate();
     } catch (e) {
       if (mounted) setState(() { _error = e.toString(); _googleLoading = false; });
     }
@@ -61,22 +59,29 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         const Duration(seconds: 20),
         onTimeout: () => throw 'Connection timed out. Please check your internet connection and try again.',
       );
-
-      // Flush ALL cached provider data from the previous account so the
-      // new account starts with a clean slate.  We do NOT invalidate
-      // currentUserProvider itself — asyncExpand() handles the auth
-      // transition smoothly on its own; forcing a re-subscribe only adds
-      // an extra loading flash.
-      invalidateAllUserDataProviders(ref);
-
-      // Navigate to home.  The router's _AuthNotifier will also redirect
-      // automatically once Firebase Auth fires, so this is just a fast path.
-      if (mounted) context.go(AppRoutes.home);
+      await _resetAndNavigate();
     } catch (e) {
       if (mounted) {
         setState(() { _error = e.toString(); _loading = false; });
       }
     }
+  }
+
+  /// Clears ALL stale provider state for the previous account, waits for the
+  /// new user's Firestore document to resolve, then navigates home.
+  /// Without the await on currentUserProvider.future the dashboard renders
+  /// before the new userId is known, so userGroupsProvider gets subscribed
+  /// with a stale/empty arg and the groups never appear.
+  Future<void> _resetAndNavigate() async {
+    // 1. Kill every cached data provider from the previous session
+    invalidateAllUserDataProviders(ref);
+    // 2. Force currentUserProvider to re-subscribe from scratch so it picks
+    //    up the new Firebase Auth user immediately
+    ref.invalidate(currentUserProvider);
+    // 3. Wait until Firestore has resolved the new user document — this
+    //    ensures the dashboard renders with the correct userId on first build
+    await ref.read(currentUserProvider.future);
+    if (mounted) context.go(AppRoutes.home);
   }
 
   @override

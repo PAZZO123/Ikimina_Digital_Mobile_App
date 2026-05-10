@@ -48,11 +48,17 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         if (mounted) setState(() => _googleLoading = false);
         return;
       }
-      invalidateAllUserDataProviders(ref);
-      if (mounted) context.go(AppRoutes.home);
+      await _resetAndNavigate();
     } catch (e) {
       if (mounted) setState(() { _error = e.toString(); _googleLoading = false; });
     }
+  }
+
+  Future<void> _resetAndNavigate() async {
+    invalidateAllUserDataProviders(ref);
+    ref.invalidate(currentUserProvider);
+    await ref.read(currentUserProvider.future);
+    if (mounted) context.go(AppRoutes.home);
   }
 
   Future<void> _register() async {
@@ -70,9 +76,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         password: _passwordCtrl.text,
         phone: _phoneCtrl.text.trim(),
       );
-      if (mounted) {
-        context.go(AppRoutes.home);
-      }
+      await _resetAndNavigate();
     } catch (e) {
       if (mounted) {
         setState(() { _error = e.toString(); _loading = false; });
