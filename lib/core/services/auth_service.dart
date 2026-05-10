@@ -214,6 +214,30 @@ class AuthService {
 
   // ─── Logout ───
   Future<void> logout() async {
+    // Sign out from Google so the account-picker appears next login.
+    // Without this, Google silently re-uses the cached account and the user
+    // cannot switch to a different Google account.
+    try {
+      final googleSignIn = GoogleSignIn();
+      if (await googleSignIn.isSignedIn()) {
+        await googleSignIn.signOut();
+      }
+    } catch (_) {
+      // Non-fatal — proceed with Firebase sign-out regardless
+    }
+
+    // Clear the FCM token so stale pushes aren't sent to this device
+    // after someone else logs in on the same phone.
+    try {
+      final user = _auth.currentUser;
+      if (user != null) {
+        await _firestore
+            .collection(AppConstants.usersCollection)
+            .doc(user.uid)
+            .update({'fcmToken': null});
+      }
+    } catch (_) {}
+
     await _auth.signOut();
   }
 
